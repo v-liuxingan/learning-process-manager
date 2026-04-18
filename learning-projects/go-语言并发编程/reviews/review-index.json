@@ -1,0 +1,91 @@
+{
+  "projectId": "go-语言并发编程",
+  "items": [
+    {
+      "id": "note-1776006756617-e57td",
+      "type": "note",
+      "title": "Goroutine 基础",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-goroutines.md"
+      },
+      "excerpt": "# Goroutine 基础  ## 1. Goroutine 概念  Goroutine 是 Go 语言中的轻量级线程，由 Go 运行时（runtime）管理。与操作系统线程相比，goroutine",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:12:36.617Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:12:36.618Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    },
+    {
+      "id": "kp-1776006763499-2l6a8",
+      "type": "knowledge-point",
+      "title": "goroutine 语法",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-goroutines.md",
+        "lineStart": 5,
+        "lineEnd": 10
+      },
+      "excerpt": "Goroutine 是 Go 语言中的轻量级线程，由 Go 运行时（runtime）管理。与操作系统线程相比，goroutine 的创建和销毁开销极小，初始栈大小仅为 2KB（可动态增长），而线程通常需要 1MB 以上。\n\n## 2. Goroutine 创建语法\n\n```go\n// 基本语法",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:12:43.499Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:12:43.499Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    },
+    {
+      "id": "fc-1776006787905",
+      "type": "flashcard",
+      "title": "什么是 Goroutine?",
+      "storageType": "inline",
+      "content": {
+        "storageType": "inline",
+        "content": "什么是 Goroutine?",
+        "contentExtra": "Goroutine 是 Go 语言中的轻量级线程，由 Go 运行时管理"
+      },
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:13:07.906Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:13:07.906Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "projectId": "vue3-组合式-api",
+  "items": [
+    {
+      "id": "note-1776006728991-b5jfb",
+      "type": "note",
+      "title": "Composition API 基础",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-composition-api.md"
+      },
+      "excerpt": "# Composition API 基础  ## 1. Composition API 简介  Composition API 是 Vue 3 引入的一组新 API，它允许我们使用函数而不是声明式选项",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:12:08.991Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:12:08.992Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    },
+    {
+      "id": "kp-1776006736249-m16lp",
+      "type": "knowledge-point",
+      "title": "ref vs reactive",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-composition-api.md",
+        "lineStart": 10,
+        "lineEnd": 15
+      },
+      "excerpt": "- 更容易提取和复用逻辑\n- 更小的打包体积\n\n## 2. setup 函数\n\n`setup` 是 Composition API 的入口函数，在组件创建前执行。它接收两个参数：",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:12:16.249Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:12:16.249Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    },
+    {
+      "id": "fc-1776006745502",
+      "type": "flashcard",
+      "title": "什么是 setup 函数?",
+      "storageType": "inline",
+      "content": {
+        "storageType": "inline",
+        "content": "什么是 setup 函数?",
+        "contentExtra": "setup 是 Composition API 的入口函数，在组件创建前执行，返回的对象属性可在模板中使用"
+      },
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:12:25.503Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:12:25.503Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    }
+  ]
+}

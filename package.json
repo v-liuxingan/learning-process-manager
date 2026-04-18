@@ -1,0 +1,56 @@
+{
+  "name": "learning-process-manager",
+  "version": "1.0.0",
+  "description": "学习进度管理 CLI 工具，支持 FSRS 和艾宾浩斯间隔重复算法",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "learn": "./dist/bin/learn.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./lib": "./dist/lib/index.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "learning",
+    "spaced-repetition",
+    "fsrs",
+    "flashcard",
+    "study",
+    "progress-tracker"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "cosmiconfig": "^9.0.0",
+    "ora": "^8.0.0",
+    "ts-fsrs": "^4.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "rimraf": "^5.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}

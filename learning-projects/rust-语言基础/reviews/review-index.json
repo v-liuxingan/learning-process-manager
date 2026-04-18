@@ -1,0 +1,149 @@
+{
+  "projectId": "rust-语言基础",
+  "items": [
+    {
+      "id": "note-1776005902475-7moc8",
+      "type": "note",
+      "title": "Rust 所有权机制",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-ownership.md"
+      },
+      "excerpt": "# Rust 所有权机制  ## 1. 所有权基础  所有权是 Rust 最独特的特性，它让 Rust 无需垃圾回收器即可保证内存安全。  ### 三条核心规则  1. Rust 中每个值都有一个所有",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T14:58:22.475Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 5.28243442,
+          "stability": 3.173,
+          "due": "2026-04-12T15:13:12.894Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 1,
+          "lapses": 0,
+          "state": "learning"
+        }
+      }
+    },
+    {
+      "id": "kp-1776005908737-ro23r",
+      "type": "knowledge-point",
+      "title": "所有权三条规则",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-ownership.md",
+        "lineStart": 7,
+        "lineEnd": 12
+      },
+      "excerpt": "### 三条核心规则\n\n1. Rust 中每个值都有一个所有者（owner）\n2. 同一时刻只能有一个所有者\n3. 当所有者离开作用域，值将被丢弃\n",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T14:58:28.737Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 7.1949,
+          "stability": 0.40255,
+          "due": "2026-04-12T15:04:16.558Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 1,
+          "lapses": 0,
+          "state": "learning"
+        }
+      }
+    },
+    {
+      "id": "proj-1776006030387-bahs2",
+      "type": "project",
+      "title": "实现一个简单的命令行计算器",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "projects/rust-calc"
+      },
+      "tags": [
+        "practice",
+        "cli"
+      ],
+      "source": {
+        "createdAt": "2026-04-12T15:00:30.387Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 6.48830527,
+          "stability": 1.18385,
+          "due": "2026-04-12T15:10:11.167Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 1,
+          "lapses": 0,
+          "state": "learning"
+        }
+      }
+    },
+    {
+      "id": "fc-1776006089033",
+      "type": "flashcard",
+      "title": "什么是所有权？",
+      "storageType": "inline",
+      "content": {
+        "storageType": "inline",
+        "content": "什么是所有权？",
+        "contentExtra": "所有权是 Rust 的内存管理机制，包含三条规则：1.每个值有一个所有者 2.同一时刻只能有一个所有者 3.所有者离开作用域时值被丢弃"
+      },
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:01:29.034Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 3.22450159,
+          "stability": 15.69105,
+          "due": "2026-04-28T15:03:20.252Z",
+          "elapsedDays": 0,
+          "scheduledDays": 16,
+          "reps": 1,
+          "lapses": 0,
+          "state": "review"
+        }
+      }
+    },
+    {
+      "id": "note-1776006279695-s5y0o",
+      "type": "note",
+      "title": "所有权复习笔记",
+      "storageType": "reference",
+      "reference": {
+        "storageType": "reference",
+        "documentPath": "notes/01-ownership.md"
+      },
+      "excerpt": "# Rust 所有权机制  ## 1. 所有权基础  所有权是 Rust 最独特的特性，它让 Rust 无需垃圾回收器即可保证内存安全。  ### 三条核心规则  1. Rust 中每个值都有一个所有",
+      "tags": [],
+      "source": {
+        "createdAt": "2026-04-12T15:04:39.695Z"
+      },
+      "review": {
+        "algorithm": "fsrs",
+        "fsrs": {
+          "difficulty": 0,
+          "stability": 0,
+          "due": "2026-04-12T15:04:39.695Z",
+          "elapsedDays": 0,
+          "scheduledDays": 0,
+          "reps": 0,
+          "lapses": 0,
+          "state": "new"
+        }
+      }
+    }
+  ]
+}
