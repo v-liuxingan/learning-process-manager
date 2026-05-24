@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import type {
   ProjectMeta,
   ProjectIndex,
@@ -12,7 +11,7 @@ import { DEFAULT_PROJECT_INDEX, DEFAULT_SETTINGS, STAGE_INFO } from '../types/in
 /**
  * 项目索引文件路径
  */
-const PROJECT_INDEX_PATH = path.join(os.homedir(), '.claude', 'learning-projects.json');
+const PROJECT_INDEX_PATH = 'E:\\develop\\Learning\\docs\\learning-projects.json';
 
 /**
  * 确保目录存在
