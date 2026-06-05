@@ -19,8 +19,11 @@ const DEFAULT_USER_SETTINGS: UserSettings = {
  */
 export class ConfigLoader {
   private config: UserSettings;
+  private configFilePath?: string;
+  private hasOverrides: boolean;
 
   constructor(overrides?: Partial<UserSettings>) {
+    this.hasOverrides = overrides !== undefined && Object.keys(overrides).length > 0;
     this.config = this.loadConfig(overrides);
   }
 
@@ -41,6 +44,7 @@ export class ConfigLoader {
 
     const result = explorer.search();
     const fileConfig = result?.config ?? {};
+    this.configFilePath = result?.filepath;
 
     // 合并配置
     const merged = {
@@ -58,6 +62,18 @@ export class ConfigLoader {
    */
   getConfig(): UserSettings {
     return this.config;
+  }
+
+  hasConfigFile(): boolean {
+    return this.configFilePath !== undefined;
+  }
+
+  hasExplicitConfig(): boolean {
+    return this.hasConfigFile() || this.hasOverrides;
+  }
+
+  getConfigFilePath(): string | undefined {
+    return this.configFilePath;
   }
 
   /**

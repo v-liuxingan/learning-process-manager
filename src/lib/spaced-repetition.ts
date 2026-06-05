@@ -16,6 +16,7 @@ import {
   createInlineItem,
   createReferenceItem,
 } from '../types/index.js';
+import { withFileLock, writeJsonAtomic } from './file-utils.js';
 
 /**
  * FSRS 算法封装
@@ -322,58 +323,62 @@ export class ReviewIndexManager {
 
   saveIndex(index: ReviewIndex): void {
     const indexPath = this.getIndexPath();
-    const dir = path.dirname(indexPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8');
+    writeJsonAtomic(indexPath, index);
   }
 
   addItem(item: ReviewableItem): void {
-    const index = this.loadIndex();
-    const existingIndex = index.items.findIndex((i) => i.id === item.id);
-    if (existingIndex >= 0) {
-      index.items[existingIndex] = item;
-    } else {
-      index.items.push(item);
-    }
-    this.saveIndex(index);
+    withFileLock(this.getIndexPath(), () => {
+      const index = this.loadIndex();
+      const existingIndex = index.items.findIndex((i) => i.id === item.id);
+      if (existingIndex >= 0) {
+        index.items[existingIndex] = item;
+      } else {
+        index.items.push(item);
+      }
+      this.saveIndex(index);
+    });
   }
 
   updateItem(item: ReviewableItem): void {
-    const index = this.loadIndex();
-    const existingIndex = index.items.findIndex((i) => i.id === item.id);
-    if (existingIndex >= 0) {
-      index.items[existingIndex] = item;
-      this.saveIndex(index);
-    }
+    withFileLock(this.getIndexPath(), () => {
+      const index = this.loadIndex();
+      const existingIndex = index.items.findIndex((i) => i.id === item.id);
+      if (existingIndex >= 0) {
+        index.items[existingIndex] = item;
+        this.saveIndex(index);
+      }
+    });
   }
 
   removeItem(itemId: string): boolean {
-    const index = this.loadIndex();
-    const existingIndex = index.items.findIndex((i) => i.id === itemId);
-    if (existingIndex >= 0) {
-      index.items.splice(existingIndex, 1);
-      this.saveIndex(index);
-      return true;
-    }
-    return false;
+    return withFileLock(this.getIndexPath(), () => {
+      const index = this.loadIndex();
+      const existingIndex = index.items.findIndex((i) => i.id === itemId);
+      if (existingIndex >= 0) {
+        index.items.splice(existingIndex, 1);
+        this.saveIndex(index);
+        return true;
+      }
+      return false;
+    });
   }
 
   recordHistory(history: ReviewHistory): void {
     const historyPath = path.join(this.projectPath, 'reviews', 'review-history.json');
-    let histories: ReviewHistory[] = [];
+    withFileLock(historyPath, () => {
+      let histories: ReviewHistory[] = [];
 
-    if (fs.existsSync(historyPath)) {
-      try {
-        histories = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
-      } catch {
-        histories = [];
+      if (fs.existsSync(historyPath)) {
+        try {
+          histories = JSON.parse(fs.readFileSync(historyPath, 'utf-8'));
+        } catch {
+          histories = [];
+        }
       }
-    }
 
-    histories.push(history);
-    fs.writeFileSync(historyPath, JSON.stringify(histories, null, 2), 'utf-8');
+      histories.push(history);
+      writeJsonAtomic(historyPath, histories);
+    });
   }
 }
 

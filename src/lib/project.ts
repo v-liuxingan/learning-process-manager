@@ -7,6 +7,8 @@ import type {
   LearningStage,
 } from '../types/index.js';
 import { DEFAULT_PROJECT_INDEX, DEFAULT_SETTINGS, STAGE_INFO } from '../types/index.js';
+import { getConfigLoader } from '../config/index.js';
+import { ensureDir, withFileLock, writeJsonAtomic } from './file-utils.js';
 
 /**
  * 项目索引文件路径
@@ -16,12 +18,6 @@ const PROJECT_INDEX_PATH = 'E:\\develop\\Learning\\docs\\learning-projects.json'
 /**
  * 确保目录存在
  */
-function ensureDir(dir: string): void {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-}
-
 /**
  * 项目管理器
  */
@@ -61,8 +57,7 @@ export class ProjectManager {
    * 保存项目索引
    */
   private saveIndex(): void {
-    ensureDir(path.dirname(this.indexPath));
-    fs.writeFileSync(this.indexPath, JSON.stringify(this.index, null, 2), 'utf-8');
+    writeJsonAtomic(this.indexPath, this.index);
   }
 
   /**
@@ -97,37 +92,42 @@ export class ProjectManager {
   }): ProjectMeta {
     const { name, topic, topicsTotal = 0 } = options;
 
-    // 检查项目是否已存在
-    if (this.getProject(name)) {
-      throw new Error(`项目 "${name}" 已存在`);
-    }
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
 
-    const now = new Date().toISOString();
-    const projectPath = options.path ?? path.join(this.index.settings.defaultProjectsDir, name);
+      if (this.getProject(name)) {
+        throw new Error(`Project "${name}" already exists`);
+      }
 
-    const project: ProjectMeta = {
-      name,
-      path: projectPath,
-      topic,
-      stage: 'novice',
-      progress: 0,
-      totalHours: 0,
-      lastStudyDate: '',
-      nextReviewDate: '',
-      topicsCompleted: 0,
-      topicsTotal,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const now = new Date().toISOString();
+      const configLoader = getConfigLoader();
+      const defaultProjectsDir = configLoader.hasExplicitConfig()
+        ? configLoader.getDefaultProjectsDir()
+        : this.index.settings.defaultProjectsDir;
+      const projectPath = options.path ?? path.join(defaultProjectsDir, name);
+      const project: ProjectMeta = {
+        name,
+        path: projectPath,
+        topic,
+        stage: 'novice',
+        progress: 0,
+        totalHours: 0,
+        lastStudyDate: '',
+        nextReviewDate: '',
+        topicsCompleted: 0,
+        topicsTotal,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    // 创建项目目录结构
-    this.createProjectDirectory(projectPath);
+      this.createProjectDirectory(projectPath);
 
-    // 添加到索引
-    this.index.projects.push(project);
-    this.saveIndex();
+      // 添加到索引
+      this.index.projects.push(project);
+      this.saveIndex();
 
-    return project;
+      return project;
+    });
   }
 
   /**
@@ -243,34 +243,40 @@ export class ProjectManager {
    * 更新项目
    */
   updateProject(name: string, updates: Partial<ProjectMeta>): ProjectMeta {
-    const index = this.index.projects.findIndex((p) => p.name === name);
-    if (index === -1) {
-      throw new Error(`项目 "${name}" 不存在`);
-    }
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+      const index = this.index.projects.findIndex((p) => p.name === name);
+      if (index === -1) {
+        throw new Error(`项目 "${name}" 不存在`);
+      }
 
-    const project = this.index.projects[index];
-    this.index.projects[index] = {
-      ...project,
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
+      const project = this.index.projects[index];
+      this.index.projects[index] = {
+        ...project,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
 
-    this.saveIndex();
-    return this.index.projects[index];
+      this.saveIndex();
+      return this.index.projects[index];
+    });
   }
 
   /**
    * 删除项目
    */
   deleteProject(name: string): boolean {
-    const index = this.index.projects.findIndex((p) => p.name === name);
-    if (index === -1) {
-      return false;
-    }
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+      const index = this.index.projects.findIndex((p) => p.name === name);
+      if (index === -1) {
+        return false;
+      }
 
-    this.index.projects.splice(index, 1);
-    this.saveIndex();
-    return true;
+      this.index.projects.splice(index, 1);
+      this.saveIndex();
+      return true;
+    });
   }
 
   /**
@@ -284,12 +290,15 @@ export class ProjectManager {
    * 更新用户设置
    */
   updateSettings(updates: Partial<UserSettings>): UserSettings {
-    this.index.settings = {
-      ...this.index.settings,
-      ...updates,
-    };
-    this.saveIndex();
-    return this.index.settings;
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+      this.index.settings = {
+        ...this.index.settings,
+        ...updates,
+      };
+      this.saveIndex();
+      return this.index.settings;
+    });
   }
 
   /**
@@ -300,31 +309,42 @@ export class ProjectManager {
     topicsCompleted?: number;
     stage?: LearningStage;
   }): ProjectMeta {
-    const project = this.getProject(name);
-    if (!project) {
-      throw new Error(`项目 "${name}" 不存在`);
-    }
-
-    const updates: Partial<ProjectMeta> = {
-      lastStudyDate: new Date().toISOString(),
-    };
-
-    if (options.duration) {
-      updates.totalHours = project.totalHours + options.duration / 60;
-    }
-
-    if (options.topicsCompleted !== undefined) {
-      updates.topicsCompleted = options.topicsCompleted;
-      if (project.topicsTotal > 0) {
-        updates.progress = Math.round((options.topicsCompleted / project.topicsTotal) * 100);
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+      const index = this.index.projects.findIndex((p) => p.name === name);
+      if (index === -1) {
+        throw new Error(`项目 "${name}" 不存在`);
       }
-    }
 
-    if (options.stage) {
-      updates.stage = options.stage;
-    }
+      const project = this.index.projects[index];
+      const updates: Partial<ProjectMeta> = {
+        lastStudyDate: new Date().toISOString(),
+      };
 
-    return this.updateProject(name, updates);
+      if (options.duration) {
+        updates.totalHours = project.totalHours + options.duration / 60;
+      }
+
+      if (options.topicsCompleted !== undefined) {
+        updates.topicsCompleted = options.topicsCompleted;
+        if (project.topicsTotal > 0) {
+          updates.progress = Math.round((options.topicsCompleted / project.topicsTotal) * 100);
+        }
+      }
+
+      if (options.stage) {
+        updates.stage = options.stage;
+      }
+
+      this.index.projects[index] = {
+        ...project,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+
+      this.saveIndex();
+      return this.index.projects[index];
+    });
   }
 
   /**

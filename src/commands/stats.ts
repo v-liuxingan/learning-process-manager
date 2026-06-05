@@ -1,6 +1,7 @@
 import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
 import { Formatter } from '../lib/formatter.js';
+import { loadStudySessions } from '../lib/session-history.js';
 import type { LearningStats } from '../types/index.js';
 
 export function registerStatsCommand(program: Command): void {
@@ -64,13 +65,21 @@ export function registerStatsCommand(program: Command): void {
         monthAgo.setDate(monthAgo.getDate() - 30);
 
         for (const project of projects) {
-          if (project.lastStudyDate) {
-            const lastDate = new Date(project.lastStudyDate);
-            if (lastDate >= weekAgo) {
-              stats.weeklyHours += project.totalHours;
+          const sessions = loadStudySessions(project.path);
+          stats.totalSessions += sessions.length;
+
+          for (const session of sessions) {
+            if (!session.endedAt || !session.duration) {
+              continue;
             }
-            if (lastDate >= monthAgo) {
-              stats.monthlyHours += project.totalHours;
+
+            const endedAt = new Date(session.endedAt);
+            const hours = session.duration / 60;
+            if (endedAt >= weekAgo) {
+              stats.weeklyHours += hours;
+            }
+            if (endedAt >= monthAgo) {
+              stats.monthlyHours += hours;
             }
           }
         }

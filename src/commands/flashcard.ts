@@ -461,7 +461,17 @@ export function registerFlashcardCommand(program: Command): void {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '添加实践项目失败';
-        console.error(`❌ ${message}`);
+        if (globalOptions.json) {
+          console.log(JSON.stringify({
+            version: '1.0',
+            timestamp: new Date().toISOString(),
+            command: 'flashcard-add-project',
+            status: 'error',
+            error: { code: 'FLASHCARD_ERROR', message },
+          }, null, 2));
+        } else {
+          console.error(`❌ ${message}`);
+        }
         process.exit(1);
       }
     });
@@ -534,7 +544,17 @@ export function registerFlashcardCommand(program: Command): void {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '获取复习项失败';
-        console.error(`❌ ${message}`);
+        if (globalOptions.json) {
+          console.log(JSON.stringify({
+            version: '1.0',
+            timestamp: new Date().toISOString(),
+            command: 'flashcard-list-all',
+            status: 'error',
+            error: { code: 'FLASHCARD_ERROR', message },
+          }, null, 2));
+        } else {
+          console.error(`❌ ${message}`);
+        }
         process.exit(1);
       }
     });

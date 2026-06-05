@@ -153,7 +153,17 @@ export function registerReviewCommand(program: Command): void {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '复习操作失败';
-        console.error(`❌ ${message}`);
+        if (options.json) {
+          console.log(JSON.stringify({
+            version: '1.0',
+            timestamp: new Date().toISOString(),
+            command: 'review',
+            status: 'error',
+            error: { code: 'REVIEW_ERROR', message },
+          }, null, 2));
+        } else {
+          console.error(`❌ ${message}`);
+        }
         process.exit(1);
       }
     });
@@ -202,7 +212,10 @@ export function registerReviewCommand(program: Command): void {
           rating: rating as ReviewRating,
           beforeState: item.review,
           afterState: updatedItem.review,
-          intervalDays: srManager.getNextReviewDate(updatedItem).getDate() - new Date().getDate(),
+          intervalDays: Math.ceil(
+            (srManager.getNextReviewDate(updatedItem).getTime() - Date.now()) /
+              (1000 * 60 * 60 * 24)
+          ),
         });
 
         if (options.json) {

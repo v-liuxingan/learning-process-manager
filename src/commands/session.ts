@@ -1,5 +1,6 @@
 import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
+import { recordStudySession } from '../lib/session-history.js';
 import type { LearningStage } from '../types/index.js';
 
 export function registerSessionCommand(program: Command): void {
@@ -82,6 +83,21 @@ export function registerSessionCommand(program: Command): void {
             }
 
             const updated = manager.updateProgress(options.project, updates);
+            const endedAt = new Date();
+            const startedAt = new Date(endedAt);
+            if (options.duration) {
+              startedAt.setMinutes(startedAt.getMinutes() - options.duration);
+            }
+
+            recordStudySession(projectEnd.path, {
+              id: `session-${endedAt.getTime()}`,
+              projectName: projectEnd.name,
+              startedAt: startedAt.toISOString(),
+              endedAt: endedAt.toISOString(),
+              duration: options.duration,
+              note: options.note,
+              summary: options.summary,
+            });
 
             if (options.json) {
               console.log(JSON.stringify({
