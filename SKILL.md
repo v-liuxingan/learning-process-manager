@@ -42,7 +42,9 @@ learn progress [project] [--stage <stage>] [--json]
 learn stats [--week] [--month] [--json]
 ```
 
-使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供路径，当前实现会通过默认设置使用 `./learning-projects/<name>`。
+使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会在存在显式配置时使用 `defaultProjectsDir`，否则使用项目索引中的默认目录设置。项目索引路径和项目目录默认值是两个概念，不要混用。
+
+配置文件由 `cosmiconfig` 加载，常见位置包括 `.learning-clirc`、`.learning-clirc.json`、`.learning-clirc.yaml`、`.learning-clirc.yml` 和 `package.json`。常用配置项包括 `defaultProjectsDir`、`reviewAlgorithm`、`ebbinghausIntervals`、`timezone`。
 
 ### 学习会话
 
@@ -51,7 +53,7 @@ learn session start --project <project> [--json]
 learn session end --project <project> --duration <minutes> --summary "<summary>" [--note "<note>"] [--stage <stage>] [--json]
 ```
 
-在真实学习结束后使用 `session end`。它会更新总学习时长和 `lastStudyDate`；如果提供 `--stage`，也会更新学习阶段。
+在真实学习结束后使用 `session end`。它会更新总学习时长和 `lastStudyDate`，并写入 `reviews/session-history.json`；如果提供 `--stage`，也会更新学习阶段。`learn stats --week/--month` 基于会话历史计算周/月学习时长。
 
 ### 复习队列
 
@@ -112,9 +114,12 @@ projects/
 resources/
 reviews/review-index.json
 reviews/review-history.json
+reviews/session-history.json
 ```
 
 `reviews/review-index.json` 保存 `ReviewableItem` 条目。`storageType: "inline"` 表示直接存储问题和答案；`storageType: "reference"` 表示存储文档路径，以及可选的章节或行号范围。
+
+`reviews/review-history.json` 保存复习提交记录。`reviews/session-history.json` 保存学习会话记录。项目索引、复习索引、复习历史和会话历史写入使用文件锁和原子写入；并发 Agent 仍应优先通过 CLI 操作，不要手工编辑这些 JSON 文件。
 
 ## 输出约定
 
@@ -141,4 +146,4 @@ JSON 响应通常使用以下结构：
 - 优先使用 `learn list --json` 返回的项目名，不要猜测项目名。
 - 生成笔记、提问和复习提示时，必须以引用文件内容为依据。
 - 除非 CLI 无法完成所需操作，或用户明确要求直接修复数据文件，否则不要手工编辑项目数据文件。
-- 修改 TypeScript 代码后运行 `npm run typecheck`。只有在存在测试文件，或需要确认当前“无测试文件”状态时，才运行 `npm run test -- --run`。
+- 修改 TypeScript 代码后运行 `npm run typecheck`、`npm run build` 和 `npm run test -- --run`。
