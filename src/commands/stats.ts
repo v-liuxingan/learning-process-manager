@@ -2,7 +2,21 @@ import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
 import { Formatter } from '../lib/formatter.js';
 import { loadStudySessions } from '../lib/session-history.js';
+import { ReviewIndexManager } from '../lib/spaced-repetition.js';
+import type { ReviewableItem } from '../types/index.js';
 import type { LearningStats } from '../types/index.js';
+
+function isMasteredFlashcard(item: ReviewableItem): boolean {
+  if (item.type !== 'flashcard') {
+    return false;
+  }
+
+  if (item.review.algorithm === 'fsrs') {
+    return item.review.fsrs?.state === 'review';
+  }
+
+  return (item.review.ebbinghaus?.completedRounds ?? 0) > 0;
+}
 
 export function registerStatsCommand(program: Command): void {
   program
@@ -67,6 +81,18 @@ export function registerStatsCommand(program: Command): void {
         for (const project of projects) {
           const sessions = loadStudySessions(project.path);
           stats.totalSessions += sessions.length;
+
+          const reviewIndex = new ReviewIndexManager(project.path).loadIndex();
+          for (const item of reviewIndex.items) {
+            if (item.type === 'note') {
+              stats.totalNotes += 1;
+            } else if (item.type === 'flashcard') {
+              stats.totalFlashcards += 1;
+              if (isMasteredFlashcard(item)) {
+                stats.masteredFlashcards += 1;
+              }
+            }
+          }
 
           for (const session of sessions) {
             if (!session.endedAt || !session.duration) {
