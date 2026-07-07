@@ -1,6 +1,6 @@
 ---
 name: learning-cli
-description: 管理本地学习项目的 learning-process-manager CLI。用于用户想创建或列出学习项目、记录学习会话、查看学习进度、管理闪卡或引用式复习项、执行 FSRS 或艾宾浩斯间隔重复复习，或提到“学习进度”、“复习计划”、“闪卡”、“间隔重复”、“learning”等场景。
+description: 管理本地学习项目的 learning-process-manager CLI。用于用户想创建或列出学习项目、记录学习会话、查看学习进度、管理闪卡或引用式复习项、执行 FSRS 或艾宾浩斯间隔重复复习，或排查 learn 命令、学习项目路径、配置和数据文件边界等场景。
 ---
 
 # Learning CLI
@@ -16,6 +16,12 @@ npm link
 如果当前工作目录不是仓库根目录，先切换到当前安装或克隆的 `learning-process-manager` 仓库目录；不要假设固定的本机路径。
 
 当输出需要被 Agent 或脚本继续处理时，优先使用 `--json`。面向用户展示时，可以使用普通文本输出。
+
+## 关联 Skill
+
+本技能只负责 `learn` CLI 的工具操作、命令边界和数据布局。
+
+当用户要求“引导我学习”“继续学习”“帮我复习”“检查学习效果”“测验我”等教学互动时，优先使用独立的 `learning-guide` skill。`learning-guide` 可调用本文档列出的 CLI 命令；命令细节和数据边界以本技能为准。
 
 ## 核心流程
 
