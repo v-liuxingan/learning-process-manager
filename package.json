@@ -1,6 +1,6 @@
 {
   "name": "learning-process-manager",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "学习进度管理 CLI 工具，支持 FSRS 和艾宾浩斯间隔重复算法",
   "type": "module",
   "packageManager": "npm@10.8.2",
