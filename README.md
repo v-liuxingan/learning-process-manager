@@ -76,20 +76,25 @@ learn flashcard add-knowledge --project <项目名> --file <笔记路径> --titl
 learn flashcard add-project --project <项目名> --dir <路径> --title "<标题>"
 learn flashcard list-all --project <项目名> [--type <类型>] [--json]
 learn stats [--week] [--month] [--json]
+learn init [--json]
+learn config get [配置项] [--json]
+learn doctor [--json]
 ```
 
 ## 数据存储
 
-默认项目索引：
+默认项目索引会保存在当前用户的应用数据目录中：
 
 ```text
-E:\develop\Learning\docs\learning-projects.json
+Windows: %APPDATA%\learning-process-manager\learning-projects.json
+macOS: ~/Library/Application Support/learning-process-manager/learning-projects.json
+Linux: ${XDG_DATA_HOME:-~/.local/share}/learning-process-manager/learning-projects.json
 ```
 
 默认项目目录：
 
 ```text
-./learning-projects/<project-name>/
+<应用数据目录>/projects/<project-name>/
 ```
 
 每个学习项目包含：
@@ -130,14 +135,25 @@ package.json
 
 ```json
 {
-  "defaultProjectsDir": "./learning-projects",
+  "indexPath": "D:/Learning/docs/learning-projects.json",
+  "defaultProjectsDir": "D:/Learning/projects",
   "reviewAlgorithm": "fsrs",
   "ebbinghausIntervals": [0.5, 1, 3, 7, 14, 30, 90],
   "timezone": "Asia/Shanghai"
 }
 ```
 
-如果存在显式配置，`learn new` 会使用配置中的 `defaultProjectsDir` 作为默认项目目录；也可以通过 `learn new --path <路径>` 覆盖单个项目路径。
+如果存在显式配置，`learn new` 会使用配置中的 `defaultProjectsDir` 作为默认项目目录；也可以通过 `learn new --path <路径>` 覆盖单个项目路径。`indexPath` 控制全局项目索引文件位置，和 `defaultProjectsDir` 是两个独立概念。
+
+也可以用环境变量覆盖路径：
+
+```bash
+LEARN_HOME=/path/to/learning-data
+LEARN_INDEX_PATH=/path/to/learning-projects.json
+LEARN_PROJECTS_DIR=/path/to/projects
+```
+
+首次使用可运行 `learn init` 创建索引文件；路径排查可运行 `learn doctor`；查看有效配置可运行 `learn config get --json`。
 
 ## 复习模型
 

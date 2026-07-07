@@ -14,6 +14,7 @@ export const ReviewAlgorithmSchema = z.enum(['fsrs', 'ebbinghaus']);
  * 用户设置 Schema
  */
 export const UserSettingsSchema = z.object({
+  indexPath: z.string().default(''),
   defaultProjectsDir: z.string().default('./learning-projects'),
   reviewAlgorithm: ReviewAlgorithmSchema.default('fsrs'),
   ebbinghausIntervals: z.array(z.number()).default([0.5, 1, 3, 7, 14, 30, 90]),

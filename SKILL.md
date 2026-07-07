@@ -40,11 +40,14 @@ learn new <topic> [--path <path>] [--topics <count>] [--json]
 learn list [--json] [--porcelain]
 learn progress [project] [--stage <stage>] [--json]
 learn stats [--week] [--month] [--json]
+learn init [--json]
+learn config get [key] [--json]
+learn doctor [--json]
 ```
 
-使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会在存在显式配置时使用 `defaultProjectsDir`，否则使用项目索引中的默认目录设置。项目索引路径和项目目录默认值是两个概念，不要混用。
+使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会使用当前有效配置中的 `defaultProjectsDir`。项目索引路径 `indexPath` 和项目目录默认值 `defaultProjectsDir` 是两个概念，不要混用。
 
-配置文件由 `cosmiconfig` 加载，常见位置包括 `.learning-clirc`、`.learning-clirc.json`、`.learning-clirc.yaml`、`.learning-clirc.yml` 和 `package.json`。常用配置项包括 `defaultProjectsDir`、`reviewAlgorithm`、`ebbinghausIntervals`、`timezone`。
+配置文件由 `cosmiconfig` 加载，常见位置包括 `.learning-clirc`、`.learning-clirc.json`、`.learning-clirc.yaml`、`.learning-clirc.yml` 和 `package.json`。常用配置项包括 `indexPath`、`defaultProjectsDir`、`reviewAlgorithm`、`ebbinghausIntervals`、`timezone`。也可以用 `LEARN_HOME`、`LEARN_INDEX_PATH`、`LEARN_PROJECTS_DIR` 覆盖路径。路径排查优先运行 `learn doctor --json`。
 
 ### 学习会话
 
@@ -96,10 +99,12 @@ learn flashcard list-all --project <project> [--type <type>] [--json]
 
 ## 数据布局
 
-当前实现将项目索引存放在：
+默认项目索引存放在当前用户的应用数据目录：
 
 ```text
-E:\develop\Learning\docs\learning-projects.json
+Windows: %APPDATA%\learning-process-manager\learning-projects.json
+macOS: ~/Library/Application Support/learning-process-manager/learning-projects.json
+Linux: ${XDG_DATA_HOME:-~/.local/share}/learning-process-manager/learning-projects.json
 ```
 
 每个项目包含：

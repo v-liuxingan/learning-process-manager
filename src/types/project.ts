@@ -48,6 +48,8 @@ export interface ProjectMeta {
  * 用户设置
  */
 export interface UserSettings {
+  /** Project index file path */
+  indexPath: string;
   /** 默认项目目录 */
   defaultProjectsDir: string;
   /** 复习算法 */
@@ -74,6 +76,7 @@ export interface ProjectIndex {
  * 默认用户设置
  */
 export const DEFAULT_SETTINGS: UserSettings = {
+  indexPath: '',
   defaultProjectsDir: './learning-projects',
   reviewAlgorithm: 'fsrs',
   ebbinghausIntervals: [0.5, 1, 3, 7, 14, 30, 90],

@@ -11,11 +11,6 @@ import { getConfigLoader } from '../config/index.js';
 import { ensureDir, withFileLock, writeJsonAtomic } from './file-utils.js';
 
 /**
- * 项目索引文件路径
- */
-const PROJECT_INDEX_PATH = 'E:\\develop\\Learning\\docs\\learning-projects.json';
-
-/**
  * 确保目录存在
  */
 /**
@@ -26,7 +21,7 @@ export class ProjectManager {
   private index: ProjectIndex;
 
   constructor(indexPath?: string) {
-    this.indexPath = indexPath ?? PROJECT_INDEX_PATH;
+    this.indexPath = indexPath ?? getConfigLoader().getIndexPath();
     this.index = this.loadIndex();
   }
 
@@ -34,23 +29,38 @@ export class ProjectManager {
    * 加载项目索引
    */
   private loadIndex(): ProjectIndex {
+    const configLoader = getConfigLoader();
+    const defaultIndex: ProjectIndex = {
+      ...DEFAULT_PROJECT_INDEX,
+      settings: {
+        ...DEFAULT_SETTINGS,
+        indexPath: this.indexPath,
+        defaultProjectsDir: configLoader.getDefaultProjectsDir(),
+        reviewAlgorithm: configLoader.getReviewAlgorithm(),
+        ebbinghausIntervals: configLoader.getEbbinghausIntervals(),
+        timezone: configLoader.getTimezone(),
+      },
+    };
+
     if (fs.existsSync(this.indexPath)) {
       try {
         const content = fs.readFileSync(this.indexPath, 'utf-8');
         const parsed = JSON.parse(content);
         return {
-          ...DEFAULT_PROJECT_INDEX,
+          ...defaultIndex,
           ...parsed,
           settings: {
-            ...DEFAULT_SETTINGS,
+            ...defaultIndex.settings,
             ...parsed.settings,
+            indexPath: parsed.settings?.indexPath ?? this.indexPath,
           },
         };
-      } catch {
-        return { ...DEFAULT_PROJECT_INDEX };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'unknown parse error';
+        throw new Error(`Failed to load project index at "${this.indexPath}": ${message}`);
       }
     }
-    return { ...DEFAULT_PROJECT_INDEX };
+    return defaultIndex;
   }
 
   /**
@@ -65,6 +75,19 @@ export class ProjectManager {
    */
   getAllProjects(): ProjectMeta[] {
     return this.index.projects;
+  }
+
+  getIndexPath(): string {
+    return this.indexPath;
+  }
+
+  initialize(): ProjectIndex {
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+      ensureDir(this.index.settings.defaultProjectsDir);
+      this.saveIndex();
+      return this.index;
+    });
   }
 
   /**

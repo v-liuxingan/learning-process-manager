@@ -42,8 +42,8 @@ npm link               # 注册全局 `learn` 命令
 
 ### 数据存储
 
-- **项目索引**: `E:\develop\Learning\docs\learning-projects.json` - 所有项目元数据和用户设置
-- **项目目录**: `./learning-projects/<name>/` - 每个学习项目的笔记、闪卡、复习记录
+- **项目索引**: 默认位于当前用户应用数据目录的 `learning-process-manager/learning-projects.json`，也可通过配置项 `indexPath` 或环境变量 `LEARN_INDEX_PATH` 覆盖
+- **项目目录**: 默认位于当前用户应用数据目录的 `learning-process-manager/projects/<name>/`，也可通过配置项 `defaultProjectsDir`、环境变量 `LEARN_PROJECTS_DIR` 或 `learn new --path` 覆盖
   - `README.md` - 学习路线图
   - `progress.md` - 学习进度追踪
   - `notes/`, `knowledge/`, `flashcards/`, `projects/`, `resources/`
@@ -71,6 +71,9 @@ learn review [项目名] [--due] [--overdue] [--type <类型>] [--limit <数量>
 learn flashcard create --project <项目名> --front "<问题>" --back "<答案>"
 learn flashcard add-note --project <项目名> --file <笔记路径> --title "<标题>"
 learn stats [--week] [--month] [--json]
+learn init [--json]
+learn config get [配置项] [--json]
+learn doctor [--json]
 ```
 
 ### 关键类型

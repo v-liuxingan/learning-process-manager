@@ -6,6 +6,7 @@ import { registerSessionCommand } from './commands/session.js';
 import { registerReviewCommand } from './commands/review.js';
 import { registerFlashcardCommand } from './commands/flashcard.js';
 import { registerStatsCommand } from './commands/stats.js';
+import { registerConfigCommand } from './commands/config.js';
 
 const program = new Command();
 
@@ -25,5 +26,6 @@ registerSessionCommand(program);
 registerReviewCommand(program);
 registerFlashcardCommand(program);
 registerStatsCommand(program);
+registerConfigCommand(program);
 
 export { program };
