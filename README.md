@@ -159,8 +159,8 @@ package.json
 
 ```json
 {
-  "indexPath": "D:/Learning/docs/learning-projects.json",
-  "defaultProjectsDir": "D:/Learning/projects",
+  "indexPath": "/path/to/learning-data/learning-projects.json",
+  "defaultProjectsDir": "/path/to/learning-data/projects",
   "reviewAlgorithm": "fsrs",
   "ebbinghausIntervals": [0.5, 1, 3, 7, 14, 30, 90],
   "timezone": "Asia/Shanghai"
