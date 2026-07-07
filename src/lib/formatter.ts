@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import type {
   ProjectMeta,
-  ProjectIndex,
   ReviewableItem,
   OverdueItem,
   LearningStats,

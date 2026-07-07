@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { getProjectManager } from '../lib/project.js';
 import { ReviewIndexManager, getSRManager } from '../lib/spaced-repetition.js';
-import type { Flashcard, FlashcardDeck, ReviewableItem } from '../types/index.js';
+import type { Flashcard, FlashcardDeck } from '../types/index.js';
 import { createInlineItem, createReferenceItem } from '../types/index.js';
 
 /**
@@ -61,7 +61,9 @@ export function registerFlashcardCommand(program: Command): void {
         if (fs.existsSync(deckPath)) {
           try {
             deck = JSON.parse(fs.readFileSync(deckPath, 'utf-8'));
-          } catch {}
+          } catch {
+            // Keep the default empty deck when the existing deck cannot be parsed.
+          }
         }
 
         deck.cards.push(card);

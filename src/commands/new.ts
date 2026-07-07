@@ -1,7 +1,5 @@
 import type { Command } from 'commander';
-import path from 'path';
 import { getProjectManager } from '../lib/project.js';
-import { Formatter } from '../lib/formatter.js';
 
 export function registerNewCommand(program: Command): void {
   program
@@ -17,7 +15,6 @@ export function registerNewCommand(program: Command): void {
 
       try {
         const manager = getProjectManager();
-        const formatter = new Formatter({ json: useJson });
 
         // 生成项目名称（从主题中提取）
         const name = topic.toLowerCase().replace(/\s+/g, '-');

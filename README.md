@@ -18,6 +18,24 @@
 
 ## 安装
 
+发布到 npm 后，普通用户可以全局安装：
+
+```bash
+npm install -g learning-process-manager
+learn init
+learn doctor
+```
+
+自测或跨平台测试时，可以从发布附件或其他下载地址拿到 `.tgz` 包后安装：
+
+```bash
+npm install -g ./learning-process-manager-1.0.0.tgz
+learn init
+learn doctor
+```
+
+本地开发安装：
+
 ```bash
 npm install
 npm run build
@@ -32,14 +50,18 @@ npm link
 npm run build        # 编译到 dist/
 npm run dev          # 监听模式构建
 npm run typecheck    # TypeScript 类型检查
-npm run test         # Vitest 测试
+npm run test:run     # Vitest 单元测试
+npm run test:e2e     # 构建后 CLI 端到端测试
 npm run lint         # ESLint
+npm run verify       # lint/typecheck/test/build/audit/pack 全量检查
+npm run pack:dry-run # 检查 npm 包内容
 npm run clean        # 清理 dist/
 ```
 
 ## 快速开始
 
 ```bash
+learn init
 learn new "JVM 深入理解" --topics 12
 learn list
 learn session start --project "jvm-深入理解"
@@ -49,6 +71,8 @@ learn review "jvm-深入理解" --due
 learn review-submit <content-id> good --project "jvm-深入理解"
 learn stats --json
 ```
+
+如果命令写入了非预期目录，先运行 `learn doctor` 查看当前索引路径、项目目录和配置来源。
 
 ## CLI 命令
 

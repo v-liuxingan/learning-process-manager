@@ -1,5 +1,3 @@
-import type { Card as FSRSCard, State as FSRSState } from 'ts-fsrs';
-
 /**
  * 可复习内容类型
  */

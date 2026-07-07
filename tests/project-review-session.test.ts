@@ -23,7 +23,9 @@ afterEach(() => {
   fs.rmSync(caseDir, { recursive: true, force: true });
   try {
     fs.rmdirSync(testRoot);
-  } catch {}
+  } catch {
+    // Other parallel test cases may still be using the shared temp root.
+  }
 });
 
 describe('project configuration and persistence', () => {

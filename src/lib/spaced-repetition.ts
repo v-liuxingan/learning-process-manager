@@ -10,7 +10,6 @@ import type {
   EbbinghausReviewState,
 } from '../types/index.js';
 import {
-  createNewReviewState,
   classifyOverdue,
   getOverdueDays,
   createInlineItem,
@@ -21,7 +20,7 @@ import { withFileLock, writeJsonAtomic } from './file-utils.js';
 /**
  * FSRS 算法封装
  */
-import { fsrs, Rating, createEmptyCard, type Card } from 'ts-fsrs';
+import { fsrs, Rating, type Card } from 'ts-fsrs';
 
 /**
  * 艾宾浩斯固定间隔（天）

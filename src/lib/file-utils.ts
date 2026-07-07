@@ -40,7 +40,9 @@ export function withFileLock<T>(targetPath: string, fn: () => T): T {
     fs.closeSync(fd);
     try {
       fs.unlinkSync(lockPath);
-    } catch {}
+    } catch {
+      // The lock file may already be gone on cleanup; the protected operation is complete.
+    }
   }
 }
 

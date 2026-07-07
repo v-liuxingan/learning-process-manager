@@ -6,7 +6,7 @@ import type {
   UserSettings,
   LearningStage,
 } from '../types/index.js';
-import { DEFAULT_PROJECT_INDEX, DEFAULT_SETTINGS, STAGE_INFO } from '../types/index.js';
+import { DEFAULT_PROJECT_INDEX, DEFAULT_SETTINGS } from '../types/index.js';
 import { getConfigLoader } from '../config/index.js';
 import { ensureDir, withFileLock, writeJsonAtomic } from './file-utils.js';
 
@@ -57,7 +57,9 @@ export class ProjectManager {
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'unknown parse error';
-        throw new Error(`Failed to load project index at "${this.indexPath}": ${message}`);
+        throw new Error(`Failed to load project index at "${this.indexPath}": ${message}`, {
+          cause: error,
+        });
       }
     }
     return defaultIndex;

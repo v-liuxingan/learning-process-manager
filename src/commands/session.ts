@@ -26,7 +26,7 @@ export function registerSessionCommand(program: Command): void {
         const manager = getProjectManager();
 
         switch (action) {
-          case 'start':
+          case 'start': {
             if (!options.project) {
               throw new Error('请指定项目名称: --project <name>');
             }
@@ -59,8 +59,9 @@ export function registerSessionCommand(program: Command): void {
               console.log('\n完成后运行 "learn session end" 记录学习结果');
             }
             break;
+          }
 
-          case 'end':
+          case 'end': {
             if (!options.project) {
               throw new Error('请指定项目名称: --project <name>');
             }
@@ -131,6 +132,7 @@ export function registerSessionCommand(program: Command): void {
               console.log(`📚 总学习时长: ${updated.totalHours.toFixed(1)} 小时`);
             }
             break;
+          }
 
           default:
             throw new Error(`未知操作: ${action}。可用: start, end`);

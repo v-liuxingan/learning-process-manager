@@ -1,7 +1,6 @@
 import { cosmiconfigSync } from 'cosmiconfig';
 import os from 'os';
 import path from 'path';
-import { z } from 'zod';
 import { UserSettingsSchema, type UserSettings } from '../types/index.js';
 
 const MODULE_NAME = 'learning-cli';
