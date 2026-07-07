@@ -29,6 +29,18 @@ afterEach(() => {
 });
 
 describe('packaged CLI', () => {
+  it('reports the package version', () => {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as {
+      version: string;
+    };
+    const output = execFileSync(process.execPath, [binPath, '--version'], {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+    }).trim();
+
+    expect(output).toBe(packageJson.version);
+  });
+
   it('initializes and diagnoses an isolated user data directory', () => {
     const init = runLearn(['init']) as {
       status: string;
