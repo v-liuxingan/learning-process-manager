@@ -49,4 +49,35 @@ describe('packaged CLI', () => {
     expect(doctor.data.indexExists).toBe(true);
     expect(doctor.data.projectsDirExists).toBe(true);
   });
+
+  it('includes review notes and flashcards in stats', () => {
+    runLearn(['new', 'Stats Repro', '--topics', '1']);
+
+    const projectPath = path.join(learnHome, 'projects', 'stats-repro');
+    const notesPath = path.join(projectPath, 'notes');
+    fs.mkdirSync(notesPath, { recursive: true });
+    fs.writeFileSync(path.join(notesPath, 'one.md'), '# One note\n\nReview this.', 'utf-8');
+
+    runLearn(['flashcard', 'create', '--project', 'stats-repro', '--front', 'Q', '--back', 'A']);
+    runLearn([
+      'flashcard',
+      'add-note',
+      '--project',
+      'stats-repro',
+      '--file',
+      'notes/one.md',
+      '--title',
+      'One note',
+    ]);
+
+    const stats = runLearn(['stats']) as {
+      status: string;
+      data: { totalNotes: number; totalFlashcards: number; masteredFlashcards: number };
+    };
+
+    expect(stats.status).toBe('success');
+    expect(stats.data.totalNotes).toBe(1);
+    expect(stats.data.totalFlashcards).toBe(1);
+    expect(stats.data.masteredFlashcards).toBe(0);
+  });
 });
