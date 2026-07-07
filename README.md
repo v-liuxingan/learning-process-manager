@@ -29,7 +29,7 @@ learn doctor
 自测或跨平台测试时，可以从发布附件或其他下载地址拿到 `.tgz` 包后安装：
 
 ```bash
-npm install -g ./learning-process-manager-1.0.0.tgz
+npm install -g ./learning-process-manager-0.1.0-alpha.1.tgz
 learn init
 learn doctor
 ```

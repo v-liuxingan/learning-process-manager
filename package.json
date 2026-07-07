@@ -1,9 +1,17 @@
 {
   "name": "learning-process-manager",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.1",
   "description": "学习进度管理 CLI 工具，支持 FSRS 和艾宾浩斯间隔重复算法",
   "type": "module",
   "packageManager": "npm@10.8.2",
+  "homepage": "https://github.com/v-liuxingan/learning-process-manager#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/v-liuxingan/learning-process-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/v-liuxingan/learning-process-manager/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {

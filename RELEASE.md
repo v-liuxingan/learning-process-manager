@@ -30,7 +30,7 @@ npm pack
 Install it on Windows, macOS, or Linux:
 
 ```bash
-npm install -g ./learning-process-manager-1.0.0.tgz
+npm install -g ./learning-process-manager-0.1.0-alpha.1.tgz
 learn init
 learn doctor
 learn new "Smoke Test" --topics 1
