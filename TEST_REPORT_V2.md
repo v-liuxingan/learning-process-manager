@@ -711,7 +711,7 @@ JVM 学习项目是一个已进行多轮学习的实际项目：
 #### 1. 导入项目
 
 ```bash
-learn new "JVM 深入理解" --topics 12 --path "E:\develop\Learning\JVM"
+learn new "JVM 深入理解" --topics 12 --path "<learning-projects-dir>/JVM"
 ```
 
 **结果**: ✅ 成功导入现有项目

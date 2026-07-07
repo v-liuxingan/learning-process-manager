@@ -8,11 +8,12 @@ description: 管理本地学习项目的 learning-process-manager CLI。用于�
 使用本技能操作此仓库提供的本地 `learn` 命令：
 
 ```bash
-cd E:/develop/projects/AiProjects/learning-process-manager
 npm install
 npm run build
 npm link
 ```
+
+如果当前工作目录不是仓库根目录，先切换到当前安装或克隆的 `learning-process-manager` 仓库目录；不要假设固定的本机路径。
 
 当输出需要被 Agent 或脚本继续处理时，优先使用 `--json`。面向用户展示时，可以使用普通文本输出。
 
@@ -147,7 +148,7 @@ JSON 响应通常使用以下结构：
 
 ## 使用边界
 
-- 除非用户提供其他安装路径，否则从 `E:/develop/projects/AiProjects/learning-process-manager` 运行命令。
+- 从当前安装或克隆的 `learning-process-manager` 仓库根目录运行开发命令；不要假设固定的本机路径。
 - 优先使用 `learn list --json` 返回的项目名，不要猜测项目名。
 - 生成笔记、提问和复习提示时，必须以引用文件内容为依据。
 - 除非 CLI 无法完成所需操作，或用户明确要求直接修复数据文件，否则不要手工编辑项目数据文件。
