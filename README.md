@@ -11,6 +11,15 @@
 - 输出人类可读文本、JSON 或 porcelain 格式，方便 Agent 和脚本集成
 - 通过文件锁和原子写入保护项目索引、复习索引、复习历史和会话历史
 
+## Agent Skills
+
+本仓库提供两个并列的 Agent skill：
+
+- `skills/learning-cli/`：管理 `learn` CLI、学习项目、复习队列、闪卡和数据边界。
+- `skills/learning-guide/`：基于 `learn` CLI 编排学习引导、复习、测验和会话记录。
+
+安装或同步 skill 时复制对应的完整 skill 目录，不要只复制单个 `SKILL.md`。
+
 ## 环境要求
 
 - Node.js >= 18
