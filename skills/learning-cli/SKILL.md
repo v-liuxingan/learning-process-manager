@@ -44,15 +44,18 @@ npm link
 
 ```bash
 learn new <topic> [--path <path>] [--topics <count>] [--json]
+learn project import --path <dir> [--name <name>] [--topic <topic>] [--topics <count>] [--json]
 learn list [--json] [--porcelain]
 learn progress [project] [--stage <stage>] [--json]
+learn status [project] [--limit <count>] [--json]
+learn next [project] [--limit <count>] [--json]
 learn stats [--week] [--month] [--json]
 learn init [--json]
 learn config get [key] [--json]
 learn doctor [--json]
 ```
 
-使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会使用当前有效配置中的 `defaultProjectsDir`。项目索引路径 `indexPath` 和项目目录默认值 `defaultProjectsDir` 是两个概念，不要混用。
+使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会使用当前有效配置中的 `defaultProjectsDir`。使用 `learn project import --path <dir>` 注册已有学习目录；该命令会补齐缺失的最小目录结构，但不会覆盖已有 `README.md`、`progress.md` 或 `reviews/review-index.json`。项目索引路径 `indexPath` 和项目目录默认值 `defaultProjectsDir` 是两个概念，不要混用。
 
 配置文件由 `cosmiconfig` 加载，常见位置包括 `.learning-clirc`、`.learning-clirc.json`、`.learning-clirc.yaml`、`.learning-clirc.yml` 和 `package.json`。常用配置项包括 `indexPath`、`defaultProjectsDir`、`reviewAlgorithm`、`ebbinghausIntervals`、`timezone`。也可以用 `LEARN_HOME`、`LEARN_INDEX_PATH`、`LEARN_PROJECTS_DIR` 覆盖路径。路径排查优先运行 `learn doctor --json`。
 
@@ -72,7 +75,7 @@ learn review [project] [--due] [--overdue] [--type <type>] [--limit <count>] [--
 learn review-submit <content-id> <rating> --project <project> [--json]
 ```
 
-使用 `--due` 查看当前应复习内容，使用 `--overdue` 查看过期内容。使用 `--type` 在向用户提问前缩小复习范围。CLI 暴露了 `--strategy` 选项，但当前没有单独实现自动过期处理动作；除非已经运行 `review-submit`，不要声称复习项已被重新调度。
+使用 `--due` 查看当前应复习内容，使用 `--overdue` 查看过期内容。使用 `--type` 在向用户提问前缩小复习范围。当前 CLI 不提供自动过期处理策略；除非已经运行 `review-submit`，不要声称复习项已被重新调度。
 
 ### 闪卡与引用式复习项
 

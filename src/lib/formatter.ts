@@ -173,7 +173,7 @@ export class Formatter {
       return createAgentOutput('review', { total: items.length, byPriority, items }, {
         context: {
           nextActions: items.length > 0
-            ? ['运行 "learn review --overdue --strategy auto" 处理过期内容']
+            ? ['运行 "learn review --overdue" 查看过期内容，复习后用 "learn review-submit" 提交评分']
             : [],
         },
       });
@@ -219,7 +219,7 @@ export class Formatter {
     }
 
     lines.push('');
-    lines.push(chalk.gray('运行 "learn review --overdue --strategy auto" 自动处理'));
+    lines.push(chalk.gray('运行 "learn review --overdue" 查看过期内容，复习后用 "learn review-submit" 提交评分'));
 
     return lines.join('\n');
   }

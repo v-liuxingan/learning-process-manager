@@ -92,4 +92,56 @@ describe('packaged CLI', () => {
     expect(stats.data.totalFlashcards).toBe(1);
     expect(stats.data.masteredFlashcards).toBe(0);
   });
+
+  it('imports an existing project and reports the next learning status', () => {
+    const projectPath = path.join(learnHome, 'external-project');
+    fs.mkdirSync(projectPath, { recursive: true });
+    fs.writeFileSync(path.join(projectPath, 'README.md'), '# External Project\n', 'utf-8');
+
+    const imported = runLearn([
+      'project',
+      'import',
+      '--path',
+      projectPath,
+      '--name',
+      'external-project',
+      '--topic',
+      'External Project',
+    ]) as {
+      status: string;
+      data: { project: { name: string; path: string } };
+    };
+
+    expect(imported.status).toBe('success');
+    expect(imported.data.project.name).toBe('external-project');
+    expect(imported.data.project.path).toBe(path.resolve(projectPath));
+
+    runLearn([
+      'flashcard',
+      'create',
+      '--project',
+      'external-project',
+      '--front',
+      'What is imported?',
+      '--back',
+      'An existing learning directory.',
+    ]);
+
+    const status = runLearn(['status', 'external-project']) as {
+      status: string;
+      data: {
+        project: { name: string };
+        reviews: { due: { total: number; items: unknown[] } };
+      };
+      context: { nextActions: string[] };
+    };
+
+    expect(status.status).toBe('success');
+    expect(status.data.project.name).toBe('external-project');
+    expect(status.data.reviews.due.total).toBe(1);
+    expect(status.data.reviews.due.items).toHaveLength(1);
+    expect(status.context.nextActions[0]).toMatch(
+      /learn review external-project --(due|overdue) --json/
+    );
+  });
 });

@@ -78,6 +78,7 @@ learn session end --project "jvm-深入理解" --duration 45 --summary "学习�
 learn flashcard create --project "jvm-深入理解" --front "什么是双亲委派模型？" --back "类加载器优先委托父加载器加载类。"
 learn review "jvm-深入理解" --due
 learn review-submit <content-id> good --project "jvm-深入理解"
+learn status "jvm-深入理解" --json
 learn stats --json
 ```
 
@@ -97,8 +98,11 @@ learn --quiet      # 最小输出
 
 ```bash
 learn new <主题> [--path <路径>] [--topics <数量>]
+learn project import --path <目录> [--name <项目名>] [--topic <主题>] [--json]
 learn list [--json] [--porcelain]
 learn progress [项目名] [--stage <阶段>] [--json]
+learn status [项目名] [--limit <数量>] [--json]
+learn next [项目名] [--limit <数量>] [--json]
 learn session start --project <项目名>
 learn session end --project <项目名> --duration <分钟> --summary "<摘要>" [--stage <阶段>]
 learn review [项目名] [--due] [--overdue] [--type <类型>] [--limit <数量>] [--json]

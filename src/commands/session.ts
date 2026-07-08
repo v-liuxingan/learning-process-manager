@@ -119,7 +119,8 @@ export function registerSessionCommand(program: Command): void {
                   stage: updated.stage,
                   nextActions: [
                     '运行 "learn review" 查看待复习内容',
-                    '运行 "learn flashcard generate" 从笔记生成闪卡',
+                    '运行 "learn flashcard create" 创建关键问答闪卡',
+                    '运行 "learn flashcard add-note" 将笔记加入复习计划',
                   ],
                 },
               }, null, 2));
