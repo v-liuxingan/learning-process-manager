@@ -39,6 +39,27 @@ describe('project configuration and persistence', () => {
     expect(project.path).toBe(path.join(configuredDir, 'alpha'));
     expect(fs.existsSync(path.join(configuredDir, 'alpha'))).toBe(true);
   });
+
+  it('imports an existing project directory without replacing files', () => {
+    const existingDir = path.join(caseDir, 'existing');
+    fs.mkdirSync(existingDir, { recursive: true });
+    fs.writeFileSync(path.join(existingDir, 'README.md'), '# Existing Plan\n', 'utf-8');
+
+    const manager = new ProjectManager(path.join(caseDir, 'index.json'));
+    const project = manager.importProject({
+      path: existingDir,
+      name: 'existing-project',
+      topic: 'Existing Topic',
+      topicsTotal: 3,
+    });
+
+    expect(project.name).toBe('existing-project');
+    expect(project.path).toBe(path.resolve(existingDir));
+    expect(fs.readFileSync(path.join(existingDir, 'README.md'), 'utf-8')).toBe('# Existing Plan\n');
+    expect(fs.existsSync(path.join(existingDir, 'progress.md'))).toBe(true);
+    expect(fs.existsSync(path.join(existingDir, 'reviews', 'review-index.json'))).toBe(true);
+    expect(manager.getProject('existing-project')?.path).toBe(path.resolve(existingDir));
+  });
 });
 
 describe('review and session history persistence', () => {

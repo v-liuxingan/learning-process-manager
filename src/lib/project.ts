@@ -25,6 +25,60 @@ export class ProjectManager {
     this.index = this.loadIndex();
   }
 
+  importProject(options: {
+    path: string;
+    name?: string;
+    topic?: string;
+    topicsTotal?: number;
+  }): ProjectMeta {
+    const projectPath = path.resolve(options.path);
+    const stat = fs.existsSync(projectPath) ? fs.statSync(projectPath) : undefined;
+    if (!stat?.isDirectory()) {
+      throw new Error(`Project directory does not exist: ${projectPath}`);
+    }
+
+    const name = options.name ?? path.basename(projectPath);
+    const topic = options.topic ?? name;
+
+    return withFileLock(this.indexPath, () => {
+      this.index = this.loadIndex();
+
+      if (this.getProject(name)) {
+        throw new Error(`Project "${name}" already exists`);
+      }
+
+      const existingPath = this.index.projects.find(
+        (project) => path.resolve(project.path) === projectPath
+      );
+      if (existingPath) {
+        throw new Error(`Project path is already registered by "${existingPath.name}"`);
+      }
+
+      this.createProjectDirectory(projectPath, name);
+
+      const now = new Date().toISOString();
+      const project: ProjectMeta = {
+        name,
+        path: projectPath,
+        topic,
+        stage: 'novice',
+        progress: 0,
+        totalHours: 0,
+        lastStudyDate: '',
+        nextReviewDate: '',
+        topicsCompleted: 0,
+        topicsTotal: options.topicsTotal ?? 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      this.index.projects.push(project);
+      this.saveIndex();
+
+      return project;
+    });
+  }
+
   /**
    * 加载项目索引
    */
@@ -145,7 +199,7 @@ export class ProjectManager {
         updatedAt: now,
       };
 
-      this.createProjectDirectory(projectPath);
+      this.createProjectDirectory(projectPath, name);
 
       // 添加到索引
       this.index.projects.push(project);
@@ -158,7 +212,7 @@ export class ProjectManager {
   /**
    * 创建项目目录结构
    */
-  private createProjectDirectory(projectPath: string): void {
+  private createProjectDirectory(projectPath: string, projectName = path.basename(projectPath)): void {
     const dirs = [
       'notes',
       'knowledge',
@@ -188,7 +242,7 @@ export class ProjectManager {
     if (!fs.existsSync(reviewIndexPath)) {
       fs.writeFileSync(
         reviewIndexPath,
-        JSON.stringify({ projectId: path.basename(projectPath), items: [] }, null, 2),
+        JSON.stringify({ projectId: projectName, items: [] }, null, 2),
         'utf-8'
       );
     }

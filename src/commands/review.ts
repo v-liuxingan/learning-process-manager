@@ -12,14 +12,12 @@ export function registerReviewCommand(program: Command): void {
     .option('--overdue', '仅显示过期内容')
     .option('--type <type>', '按类型筛选 (note/knowledge-point/project/flashcard)')
     .option('--limit <number>', '限制数量', parseInt)
-    .option('--strategy <strategy>', '过期处理策略 (reset/reschedule/continue/auto)')
     .action((projectName: string | undefined, _args, cmd) => {
       const options = cmd.optsWithGlobals() as {
         due?: boolean;
         overdue?: boolean;
         type?: string;
         limit?: number;
-        strategy?: string;
         json?: boolean;
       };
 
@@ -87,7 +85,7 @@ export function registerReviewCommand(program: Command): void {
               data: { total: limitedOverdueItems.length, byPriority, items: limitedOverdueItems },
               context: {
                 nextActions: limitedOverdueItems.length > 0
-                  ? ['运行 "learn review --overdue --strategy auto" 处理过期内容']
+                  ? ['运行 "learn review --overdue" 查看过期内容，复习后用 "learn review-submit" 提交评分']
                   : [],
               },
             }, null, 2));

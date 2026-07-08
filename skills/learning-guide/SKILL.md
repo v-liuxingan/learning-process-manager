@@ -24,7 +24,9 @@ learn list --json
 常用映射：
 
 - 查项目：`learn list --json`
+- 查下一步：`learn status [project] --json` 或 `learn next [project] --json`
 - 查进度：`learn progress [project] --json`
+- 注册已有目录：`learn project import --path <dir> [--name <project>] [--topic <topic>] --json`
 - 开始学习：`learn session start --project <project> --json`
 - 结束学习：`learn session end --project <project> --duration <minutes> --summary "<summary>" --json`
 - 查待复习：`learn review [project] --due --json`
@@ -38,9 +40,9 @@ learn list --json
 
 ## 启动流程
 
-1. 运行 `learn list --json` 获取项目列表，不要猜项目名。
-2. 运行 `learn progress [project] --json` 获取当前阶段、进度、下一步计划和最近学习记录。
-3. 如用户请求复习，或进度显示有待复习内容，运行 `learn review [project] --due --json`。
+1. 优先运行 `learn status [project] --json` 或 `learn next [project] --json` 获取当前项目、进度、最近会话、待复习摘要和下一步建议；不要猜项目名。
+2. 如需更完整项目列表，运行 `learn list --json`；如需更细进度，运行 `learn progress [project] --json`。
+3. 如用户请求复习，或 status 显示有待复习内容，运行 `learn review [project] --due --json`。
 4. 读取与本次主题相关的项目笔记，只读取必要文件或行范围。
 5. 用一句话确认本次目标和范围；如果用户已明确目标，直接开始。
 6. 按会话记录规则决定是否运行 `learn session start --project <project> --json`。

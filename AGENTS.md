@@ -63,8 +63,11 @@ npm link               # 注册全局 `learn` 命令
 
 ```bash
 learn new <主题> [--path <路径>] [--topics <数量>]
+learn project import --path <目录> [--name <项目名>] [--topic <主题>] [--json]
 learn list [--json]
 learn progress [项目名] [--stage <阶段>] [--json]
+learn status [项目名] [--limit <数量>] [--json]
+learn next [项目名] [--limit <数量>] [--json]
 learn session start --project <项目名>
 learn session end --project <项目名> --duration <分钟> --summary "<摘要>"
 learn review [项目名] [--due] [--overdue] [--type <类型>] [--limit <数量>] [--json]

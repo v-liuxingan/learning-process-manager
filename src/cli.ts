@@ -8,6 +8,8 @@ import { registerReviewCommand } from './commands/review.js';
 import { registerFlashcardCommand } from './commands/flashcard.js';
 import { registerStatsCommand } from './commands/stats.js';
 import { registerConfigCommand } from './commands/config.js';
+import { registerProjectCommand } from './commands/project.js';
+import { registerStatusCommand } from './commands/status.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
@@ -31,5 +33,7 @@ registerReviewCommand(program);
 registerFlashcardCommand(program);
 registerStatsCommand(program);
 registerConfigCommand(program);
+registerProjectCommand(program);
+registerStatusCommand(program);
 
 export { program };
