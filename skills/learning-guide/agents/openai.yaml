@@ -1,7 +1,7 @@
 interface:
   display_name: "Learning Guide"
-  short_description: "按进度引导学习、复习和测验"
-  default_prompt: "Use $learning-guide to continue my current learning project with a short guided study session."
+  short_description: "用单步互动和掌握证据引导学习"
+  default_prompt: "Use $learning-guide to inspect my current learning state and guide one focused study step at a time."
 
 policy:
   allow_implicit_invocation: true
