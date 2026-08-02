@@ -26,8 +26,12 @@ description: 基于 learning-process-manager 准备学习项目并引导结构�
 learn status [project] --json
 learn list --json
 learn progress [project] --json
+learn unit list --project <project> --json
+learn unit next --project <project> --json
+learn unit evidence --project <project> --unit <id> --type <type> --role <role> --summary "<summary>" --json
+learn unit transition --project <project> --unit <id> --to <status> --json
 learn project import --path <dir> [--name <project>] [--topic <topic>] --json
-learn session start --project <project> --json
+learn session start --project <project> --unit <id> --json
 learn session end --project <project> --duration <minutes> --summary "<summary>" --json
 learn review [project] --due --json
 learn review [project] --overdue --json
@@ -41,11 +45,11 @@ learn flashcard add-note/add-knowledge/add-project ... --json
 ## 启动会话
 
 1. 从用户请求确定候选模式：新学、复习、测验、查漏或项目实践。
-2. 运行 `learn status [project] --json`，读取项目、阶段、最近会话、到期复习和 `context.nextActions`。
+2. 运行 `learn status [project] --json`，读取活动会话、下一学习单元、最近会话、到期复习和 `context.nextActions`。
 3. 读取本次主题所需的最少项目材料。引用式复习只读取返回的文件、章节或行范围。
 4. 定义本次小目标：一个知识单元、可观察的掌握证据、停止条件。
-5. 用户目标明确时直接开始；只有目标或项目存在实质歧义时才提一个短问题。
-6. 正式教学、复习、测验或持续超过 5 分钟的互动，运行一次 `learn session start`。短问答、只查状态或用户要求不记录时跳过。
+5. 用户目标明确时直接开始；普通教学会话只有目标或项目存在实质歧义时才提一个短问题。学习项目初始化按初始化规范的最小信息协议处理。
+6. 正式教学、复习、测验或持续超过 5 分钟的互动，使用 `learn session start --unit <id>` 绑定当前单元。短问答、只查状态或用户要求不记录时跳过。
 
 若用户给出了明确的现有项目目录但尚未注册，在确认目录属于当前任务后使用 `learn project import`；不要仅因名称相似导入目录。
 
@@ -53,13 +57,18 @@ learn flashcard add-note/add-knowledge/add-project ... --json
 
 用户要求制定计划或创建学习项目时，不要直接生成通用周计划。按项目初始化规范完成目标诊断、范围设计、知识依赖、阶段产出、资源证据、练习与验收，再运行 `learn new` 或 `learn project import`。
 
+初始化前先从当前对话、已有材料和项目环境推断输入。只有缺失信息会改变终点、路线规模或实践可行性时，才一次集中询问，最多三个短问题；其余内容写明假设并继续。不要让用户自报抽象等级，实际起点在首个学习单元用诊断任务验证。
+
 CLI 创建的目录只是骨架。必须替换 `README.md`、`progress.md` 等文件中的占位内容，创建本项目真正需要的资源与实践入口，并通过质量门禁后，才能声称“学习项目已准备完成”。
+
+初始化时一次性准备核心学习路径、知识地图以及各核心单元可执行的 Note 骨架，并按依赖顺序用 `learn unit add` 注册，不只创建第一章，也不预写虚假的学习结果。后续教学、收尾与复习默认增量更新同一个主 Note；只保存能反映关键错误、提示依赖或验收结果的代表性证据，不保存完整对话。禁止在每次学完后重新生成整份 Note。只有单元拆分或路线实质变化时才重构，并保留迁移关系。
 
 严格保持 CLI 顶层目录契约：
 
 ```text
 README.md
 progress.md
+learning-units.json
 notes/
 knowledge/
 flashcards/
@@ -68,7 +77,7 @@ resources/
 reviews/
 ```
 
-不要另建同义的 `learning-plan.md`、`roadmap/`、`lessons/`、`labs/`、`evidence/`、`references.md`、`review-log.md` 等平行体系。路线和验收写入 `README.md`，实验与证据进入 `projects/`，资料进入 `resources/`，状态进入 `progress.md`，闪卡和复习状态只通过 CLI 管理。宿主知识库有强制规则时按初始化规范记录映射，但仍保留 CLI 所需数据契约。
+不要另建同义的 `learning-plan.md`、`roadmap/`、`lessons/`、`labs/`、`evidence/`、`references.md`、`review-log.md` 等平行体系。路线和验收写入 `README.md`，实验产物进入 `projects/`，资料进入 `resources/`，人类可读状态进入 `progress.md`；单元、证据、闪卡和复习状态只通过 CLI 管理对应数据文件。
 
 ## 决策规则
 
@@ -101,7 +110,7 @@ reviews/
 - **应用**：能否在熟悉场景中正确使用。
 - **迁移**：能否处理条件变化、反例和边界。
 
-“已掌握”至少需要解释证据和应用证据；高风险或实践型主题还需要产物、运行结果或故障分析。阶段变更只在已有持续证据且用户目标确实达成时通过 CLI 提交。
+同一会话内达到解释和应用证据只算“当场通过”：用 `unit evidence` 提交精选证据，并将单元推进到 `consolidating`。至少经过一次延迟检索仍能独立完成，提交 `--delayed` 证据后，才允许转为 `mastered`。高风险或实践型主题还需要 `artifact`、运行结果或故障分析。
 
 ## 复习与评分
 
@@ -119,11 +128,13 @@ reviews/
 
 在用户完成目标、明确停止或对话自然收束时：
 
-1. 总结实际完成内容、掌握证据、仍存在的缺口和唯一的下一步建议。
-2. 若启动过会话，按真实经过时间计算分钟数并运行一次 `session end`。无法可靠确定时长时，说明原因并询问，不编造。
-3. 只把稳定、原子、可检索的高价值问答制成闪卡；创建前避免与现有卡片重复。
-4. 只有命令成功后才声称记录、创建或调度完成。
-5. 按质量标准检查本轮新增产物；不合格内容先修订，不因文件已生成就视为有效学习成果。
+1. 从本轮互动中只选择具有诊断或验收价值的证据；用 `attempt/misconception/correction/verification/observation` 标明事实角色后通过 `unit evidence` 提交。配置了 Note 时由 CLI 同步追加证据条目。不要逐轮保存完整问答。
+2. 根据证据运行合法的 `unit transition`，未达到门槛时保留当前状态或转入 `remediation`。
+3. 总结实际完成内容、掌握证据、仍存在的缺口和唯一的下一步建议。
+4. 若启动过会话，运行一次 `session end`；CLI 优先使用持久化的真实开始时间，只有缺少活动会话时才需要提供时长。
+5. 只把稳定、原子、可检索的高价值问答制成闪卡；创建前避免与现有卡片重复。
+6. 只有命令成功后才声称记录、创建、迁移或调度完成。
+7. 按质量标准检查本轮新增产物；不合格内容先修订，不因文件已生成就视为有效学习成果。
 
 中断后再次继续时，先读取 `status` 和最近会话；不要重复启动仍处于当前对话上下文中的会话，也不要把未完成内容记为完成。
 
@@ -133,6 +144,8 @@ reviews/
 - 笔记或引用不存在：停止基于该材料提问，报告缺失路径，不凭空生成“原笔记内容”。
 - `session start` 失败：可以继续教学，但明确说明本次尚未记录；结束时不要假装存在已启动会话。
 - `session end`、闪卡或评分提交失败：保留待写入摘要，报告失败命令和最小重试动作。
+- `unit evidence` 失败：不声称 Note 或单元索引已经更新；保留精选证据摘要并报告失败原因。
+- `unit transition` 被拒绝：读取缺失的前置或证据门槛，回到对应教学动作，不绕过状态机。
 - 工具输出与项目文档冲突：以 CLI 管理状态为持久化事实，以原始学习材料为内容事实；明确指出冲突，不静默覆盖。
 
 ## 禁止行为
@@ -146,3 +159,4 @@ reviews/
 - 保留“目标 1”“项目 1”“XX 分钟”等模板占位符却声称项目已准备完成。
 - 未获得成功输出就声称进度、会话、闪卡或复习已写入。
 - 同时手工编辑和调用 CLI 写同一份状态数据。
+- 把完整对话逐轮写入 Note，或把错误回答与已核对结论并列而不标注事实状态。

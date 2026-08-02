@@ -51,6 +51,10 @@ export interface StudySession {
   note?: string;
   /** 学习摘要 */
   summary?: string;
+  /** 绑定的学习单元 */
+  unitId?: string;
+  /** 会话产生的证据 ID */
+  evidenceIds?: string[];
 }
 
 /**

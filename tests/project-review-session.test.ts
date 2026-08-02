@@ -38,6 +38,13 @@ describe('project configuration and persistence', () => {
 
     expect(project.path).toBe(path.join(configuredDir, 'alpha'));
     expect(fs.existsSync(path.join(configuredDir, 'alpha'))).toBe(true);
+    expect(fs.existsSync(path.join(project.path, 'learning-units.json'))).toBe(true);
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('consolidating');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('起点与假设');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('诊断任务');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).not.toContain('目标 1');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).not.toContain('{{');
+    expect(fs.readFileSync(path.join(project.path, 'progress.md'), 'utf-8')).toContain('延迟验证');
   });
 
   it('imports an existing project directory without replacing files', () => {
@@ -57,7 +64,9 @@ describe('project configuration and persistence', () => {
     expect(project.path).toBe(path.resolve(existingDir));
     expect(fs.readFileSync(path.join(existingDir, 'README.md'), 'utf-8')).toBe('# Existing Plan\n');
     expect(fs.existsSync(path.join(existingDir, 'progress.md'))).toBe(true);
+    expect(fs.readFileSync(path.join(existingDir, 'progress.md'), 'utf-8')).toContain('延迟验证');
     expect(fs.existsSync(path.join(existingDir, 'reviews', 'review-index.json'))).toBe(true);
+    expect(fs.existsSync(path.join(existingDir, 'learning-units.json'))).toBe(true);
     expect(manager.getProject('existing-project')?.path).toBe(path.resolve(existingDir));
   });
 });

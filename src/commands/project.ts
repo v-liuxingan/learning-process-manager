@@ -61,6 +61,7 @@ export function registerProjectCommand(program: Command): void {
                 'flashcards/',
                 'projects/',
                 'resources/',
+                'learning-units.json',
                 'reviews/review-index.json',
               ],
             },

@@ -42,7 +42,7 @@ export function registerNewCommand(program: Command): void {
             context: {
               nextActions: [
                 '编辑 README.md 设置学习目标',
-                `运行 "learn session start ${name}" 开始学习`,
+                `运行 "learn unit add --project ${name} --id <id> --title <title>" 注册学习单元`,
               ],
             },
           }, null, 2));
@@ -52,7 +52,7 @@ export function registerNewCommand(program: Command): void {
           console.log(`🎯 主题: ${topic}`);
           console.log('\n下一步:');
           console.log(`  • 编辑 README.md 设置学习目标`);
-          console.log(`  • 运行 "learn session start ${name}" 开始学习`);
+          console.log(`  • 运行 "learn unit add --project ${name} --id <id> --title <title>" 注册学习单元`);
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : '创建项目失败';

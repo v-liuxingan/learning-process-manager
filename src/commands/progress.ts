@@ -2,6 +2,7 @@ import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
 import { ReviewIndexManager, getSRManager } from '../lib/spaced-repetition.js';
 import { Formatter } from '../lib/formatter.js';
+import { LearningUnitManager } from '../lib/learning-unit.js';
 
 export function registerProgressCommand(program: Command): void {
   program
@@ -33,6 +34,9 @@ export function registerProgressCommand(program: Command): void {
             due: dueItems.length,
             overdue: overdueItems.length,
           };
+          const unitManager = new LearningUnitManager(project.path, project.name);
+          const unitStats = unitManager.getStats();
+          const nextUnit = unitManager.getNextUnit();
 
           // JSON 输出
           if (options.json) {
@@ -44,11 +48,15 @@ export function registerProgressCommand(program: Command): void {
               data: {
                 ...project,
                 reviews: reviewStats,
+                learningUnits: {
+                  stats: unitStats,
+                  next: nextUnit,
+                },
               },
               context: {
                 project: project.name,
                 stage: project.stage,
-                nextActions: getNextActions(project, reviewStats),
+                nextActions: getNextActions(project.name, reviewStats, nextUnit, unitStats.total),
               },
             };
             console.log(JSON.stringify(output, null, 2));
@@ -57,6 +65,8 @@ export function registerProgressCommand(program: Command): void {
 
           const output = formatter.formatProjectProgress(project, reviewStats);
           console.log(output);
+          console.log(`\n学习单元: ${unitStats.mastered}/${unitStats.total} mastered`);
+          if (nextUnit) console.log(`下一单元: ${nextUnit.id} (${nextUnit.status})`);
         } else {
           // 显示所有项目概览
           let projects = manager.getAllProjects();
@@ -96,8 +106,10 @@ export function registerProgressCommand(program: Command): void {
 }
 
 function getNextActions(
-  project: { progress: number; stage: string },
-  reviewStats?: { due: number; overdue: number }
+  projectName: string,
+  reviewStats: { due: number; overdue: number },
+  nextUnit: { id: string } | null,
+  unitTotal: number
 ): string[] {
   const actions: string[] = [];
 
@@ -107,16 +119,11 @@ function getNextActions(
     actions.push(`复习 ${reviewStats.due} 项待复习内容`);
   }
 
-  if (project.progress < 100) {
-    actions.push('继续学习下一主题');
-  }
-
-  if (project.stage === 'novice' && project.progress >= 30) {
-    actions.push('考虑升级到 Beginner 阶段');
-  }
+  if (nextUnit) actions.push(`learn session start --project ${projectName} --unit ${nextUnit.id}`);
+  else if (unitTotal === 0) actions.push(`learn unit add --project ${projectName} --id <id> --title "<title>"`);
 
   if (actions.length === 0) {
-    actions.push('继续学习！保持节奏 🎯');
+    actions.push(`learn unit list --project ${projectName}`);
   }
 
   return actions;
