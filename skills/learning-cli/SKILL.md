@@ -26,7 +26,7 @@ npm link
 ## 核心流程
 
 1. 用 `learn list --json` 获取项目列表。
-2. 用 `learn progress [project] --json` 查看学习进度。
+2. 用 `learn status [project] --json` 查看下一单元、活动会话和教学入口；用 `learn progress [project] --json` 查看项目进度。
 3. 用 `learn unit next/list` 读取单元状态，用 `unit evidence/transition` 提交证据与状态迁移。
 4. 用 `learn session start|end` 开始或结束绑定单元的真实学习会话。
 5. 用 `learn flashcard ...` 添加可复习内容。
@@ -40,6 +40,18 @@ npm link
 学习单元状态只能使用：`not_started`、`learning`、`assessment_pending`、`consolidating`、`mastered`、`remediation`。项目阶段是兼容性元数据，不等于单元掌握状态。
 
 复习项类型只能使用：`note`、`knowledge-point`、`project`、`flashcard`。
+
+## 教学入口状态
+
+`learn status [project] --json` 和 `learn session start ... --json` 返回 `data.teachingEntry`，供教学 Agent 决定诊断前需要哪种导览：
+
+- `project_and_unit_overview`：首次进入项目和首个单元；先读取 `README.md`，再读取单元 Note。
+- `project_overview`：首次进入项目但当前没有可教学单元。
+- `unit_overview`：项目已有历史会话，但当前单元尚无历史会话。
+- `resume`：当前单元已有历史会话，只需简短续学定位。
+- `none`：当前没有需要呈现的教学入口。
+
+`teachingEntry.sequence` 是建议执行顺序，`sources.projectOverview` 和 `sources.unitOverview` 是项目内相对路径。状态依据真实会话历史和单元状态推导；导览不是掌握证据，不自动改变单元状态。首次单元的活动会话在尚无已结束历史时仍会保留首次导览提示，避免中断后直接跳到诊断。
 
 ## 命令
 
@@ -78,6 +90,8 @@ learn session end --project <project> --duration <minutes> --summary "<summary>"
 在真实学习结束后使用 `session end`。它会更新总学习时长和 `lastStudyDate`，并写入 `reviews/session-history.json`；如果提供 `--stage`，也会更新学习阶段。`learn stats --week/--month` 基于会话历史计算周/月学习时长。
 
 `session start --unit` 会绑定单元并保存活动会话；`session end` 使用真实开始时间，结束后写入历史并清除活动状态。`session end` 和项目 `stage` 不自动表示单元已稳定掌握。
+
+开始会话的 JSON 结果会保留启动前的 `teachingEntry`。教学 Agent 应按其顺序完成课程总览、单元导览或续学定位，再进入诊断、检索或应用。
 
 `unit evidence` 将精选证据写入 `learning-units.json`；单元配置了 `notePath` 时，同时向 Note 的“学习证据”章节追加简短标记记录。完整对话不得作为证据批量写入。`type` 表示能力层级，`role` 表示初始尝试、误区、纠正、验收或观察；只有独立的 `correction/verification` 能满足状态门槛。进入 `consolidating` 需要独立解释和应用证据，进入 `mastered` 需要延迟独立证据。
 
@@ -177,4 +191,4 @@ JSON 响应通常使用以下结构：
 - 优先使用 `learn list --json` 返回的项目名，不要猜测项目名。
 - 生成笔记、提问和复习提示时，必须以引用文件内容为依据。
 - 除非 CLI 无法完成所需操作，或用户明确要求直接修复数据文件，否则不要手工编辑项目数据文件。
-- 修改 TypeScript 代码后运行 `npm run typecheck`、`npm run build` 和 `npm run test -- --run`。
+- 修改 TypeScript 代码后运行 `npm run typecheck`、`npm run build` 和 `npm run test`。

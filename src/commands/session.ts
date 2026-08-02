@@ -3,10 +3,12 @@ import { getProjectManager } from '../lib/project.js';
 import {
   clearActiveSession,
   loadActiveSession,
+  loadStudySessions,
   recordStudySession,
   startStudySession,
 } from '../lib/session-history.js';
 import { LearningUnitManager } from '../lib/learning-unit.js';
+import { buildTeachingEntryContext } from '../lib/teaching-entry.js';
 import type { LearningStage } from '../types/index.js';
 
 export function registerSessionCommand(program: Command): void {
@@ -46,8 +48,8 @@ export function registerSessionCommand(program: Command): void {
               throw new Error('已有进行中的学习会话，请先结束后再开始');
             }
             const unitManager = new LearningUnitManager(projectStart.path, projectStart.name);
+            const learningUnit = options.unit ? unitManager.getUnit(options.unit) : null;
             if (options.unit) {
-              const learningUnit = unitManager.getUnit(options.unit);
               if (!learningUnit) {
                 throw new Error(`学习单元 "${options.unit}" 不存在`);
               }
@@ -55,6 +57,10 @@ export function registerSessionCommand(program: Command): void {
                 unitManager.transition(options.unit, 'learning');
               }
             }
+            const teachingEntry = buildTeachingEntryContext({
+              unit: learningUnit ?? null,
+              completedSessions: loadStudySessions(projectStart.path),
+            });
             const started = startStudySession(projectStart.path, {
               id: `session-${Date.now()}`,
               projectName: projectStart.name,
@@ -71,11 +77,13 @@ export function registerSessionCommand(program: Command): void {
                   action: 'start',
                   project: projectStart,
                   session: started,
+                  teachingEntry,
                 },
                 context: {
                   project: projectStart.name,
                   stage: projectStart.stage,
                   nextActions: [
+                    '按照 data.teachingEntry.sequence 完成所需导览，再进入诊断或检索',
                     '学习完成后运行 "learn session end" 记录结果',
                   ],
                 },
@@ -84,6 +92,10 @@ export function registerSessionCommand(program: Command): void {
               console.log(`📚 开始学习: ${projectStart.name}`);
               console.log(`🎯 主题: ${projectStart.topic}`);
               console.log(`📊 当前进度: ${projectStart.progress}%`);
+              if (teachingEntry.mode !== 'none') {
+                console.log(`🧭 教学入口: ${teachingEntry.mode}`);
+                console.log(`   ${teachingEntry.sequence.join(' -> ')}`);
+              }
               console.log('\n完成后运行 "learn session end" 记录学习结果');
             }
             break;

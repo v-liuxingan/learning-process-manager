@@ -164,20 +164,46 @@ describe('packaged CLI', () => {
     ]);
 
     const before = runLearn(['status', projectName]) as {
-      data: { learningUnits: { next: { id: string } } };
+      data: {
+        learningUnits: { next: { id: string } };
+        teachingEntry: { mode: string; sequence: string[]; sources: { unitOverview?: string } };
+      };
       context: { nextActions: string[] };
     };
     expect(before.data.learningUnits.next.id).toBe('foundation');
+    expect(before.data.teachingEntry.mode).toBe('project_and_unit_overview');
+    expect(before.data.teachingEntry.sequence).toEqual([
+      'project_overview',
+      'unit_overview',
+      'diagnostic',
+    ]);
+    expect(before.data.teachingEntry.sources.unitOverview).toBe('notes/foundation.md');
     expect(before.context.nextActions[0]).toContain('--unit foundation');
 
-    runLearn(['session', 'start', '--project', projectName, '--unit', 'foundation']);
+    const started = runLearn([
+      'session', 'start', '--project', projectName, '--unit', 'foundation',
+    ]) as {
+      data: { teachingEntry: { mode: string; sequence: string[] } };
+    };
+    expect(started.data.teachingEntry.mode).toBe('project_and_unit_overview');
+    expect(started.data.teachingEntry.sequence[0]).toBe('project_overview');
     const active = runLearn(['status', projectName]) as {
-      data: { activeSession: { unitId: string } };
+      data: {
+        activeSession: { unitId: string };
+        teachingEntry: { mode: string };
+      };
       context: { nextActions: string[] };
     };
     expect(active.data.activeSession.unitId).toBe('foundation');
+    expect(active.data.teachingEntry.mode).toBe('project_and_unit_overview');
     expect(active.context.nextActions[0]).toContain('session end');
     runLearn(['session', 'end', '--project', projectName, '--duration', '12', '--summary', 'Foundation session']);
+
+    const resumed = runLearn(['status', projectName]) as {
+      data: { teachingEntry: { mode: string; sequence: string[] } };
+    };
+    expect(resumed.data.teachingEntry.mode).toBe('resume');
+    expect(resumed.data.teachingEntry.sequence).toEqual(['resume_brief', 'diagnostic']);
 
     runLearn(['unit', 'evidence', '--project', projectName, '--unit', 'foundation', '--type', 'explain', '--summary', 'Explained independently']);
     runLearn(['unit', 'evidence', '--project', projectName, '--unit', 'foundation', '--type', 'apply', '--summary', 'Applied independently']);
@@ -199,5 +225,22 @@ describe('packaged CLI', () => {
     expect(completed.data.learningUnits.stats.mastered).toBe(1);
     expect(completed.data.activeSession).toBeNull();
     expect(fs.readFileSync(path.join(projectPath, 'notes', 'foundation.md'), 'utf-8')).toContain('Applied after delay');
+
+    runLearn([
+      'unit', 'add',
+      '--project', projectName,
+      '--id', 'application',
+      '--title', 'Application',
+      '--prerequisites', 'foundation',
+    ]);
+    const nextUnit = runLearn(['status', projectName]) as {
+      data: {
+        learningUnits: { next: { id: string } };
+        teachingEntry: { mode: string; sequence: string[] };
+      };
+    };
+    expect(nextUnit.data.learningUnits.next.id).toBe('application');
+    expect(nextUnit.data.teachingEntry.mode).toBe('unit_overview');
+    expect(nextUnit.data.teachingEntry.sequence).toEqual(['unit_overview', 'diagnostic']);
   });
 });
