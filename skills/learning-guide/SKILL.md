@@ -1,13 +1,17 @@
 ---
 name: learning-guide
-description: 基于 learning-process-manager 引导结构化学习、继续学习、复习、测验、知识查漏或项目实践。用于用户提出“引导我学习”“继续学习”“帮我复习”“测验我”“检查掌握程度”“带我做学习项目”等请求；读取 learn CLI 的项目状态与复习队列，以单步互动、费曼讲解、检索练习和可观察证据调整教学，并可靠记录会话、闪卡与复习评分。
+description: 基于 learning-process-manager 准备学习项目并引导结构化学习、继续学习、复习、测验、知识查漏或项目实践。用于用户提出“制定学习计划”“创建学习项目”“引导我学习”“继续学习”“帮我复习”“测验我”“检查掌握程度”“带我做学习项目”等请求；执行学习需求诊断、项目初始化、教学备课、单步互动、费曼讲解、检索练习、质量验收，并通过 learn CLI 可靠管理进度、会话、闪卡与复习评分。
 ---
 
 # Learning Guide
 
 作为学习教练控制一次有状态的学习会话。负责目标、教学决策、互动反馈和掌握证据；把项目、进度、会话、复习调度和闪卡持久化交给 `learn` CLI。
 
-详细的模式选择、教学策略、掌握度量和示例见 [教学编排手册](references/teaching-playbook.md)。只有在需要设计教学、评估回答或处理会话异常时读取该文件。
+按任务读取对应规范，不要只凭主文件临场发挥：
+
+- 创建、规划、导入或重整学习项目时，完整读取 [学习项目初始化](references/project-initialization.md)。
+- 正式讲解、继续学习、复习、测验、查漏或项目辅导时，完整读取 [教学编排手册](references/teaching-playbook.md)。
+- 创建或验收路线图、笔记、练习、项目、闪卡、复习项及会话记录时，读取 [学习产物质量标准](references/quality-standards.md) 的对应章节；首次创建项目时完整读取。
 
 ## 权责边界
 
@@ -44,6 +48,27 @@ learn flashcard add-note/add-knowledge/add-project ... --json
 6. 正式教学、复习、测验或持续超过 5 分钟的互动，运行一次 `learn session start`。短问答、只查状态或用户要求不记录时跳过。
 
 若用户给出了明确的现有项目目录但尚未注册，在确认目录属于当前任务后使用 `learn project import`；不要仅因名称相似导入目录。
+
+## 初始化学习项目
+
+用户要求制定计划或创建学习项目时，不要直接生成通用周计划。按项目初始化规范完成目标诊断、范围设计、知识依赖、阶段产出、资源证据、练习与验收，再运行 `learn new` 或 `learn project import`。
+
+CLI 创建的目录只是骨架。必须替换 `README.md`、`progress.md` 等文件中的占位内容，创建本项目真正需要的资源与实践入口，并通过质量门禁后，才能声称“学习项目已准备完成”。
+
+严格保持 CLI 顶层目录契约：
+
+```text
+README.md
+progress.md
+notes/
+knowledge/
+flashcards/
+projects/
+resources/
+reviews/
+```
+
+不要另建同义的 `learning-plan.md`、`roadmap/`、`lessons/`、`labs/`、`evidence/`、`references.md`、`review-log.md` 等平行体系。路线和验收写入 `README.md`，实验与证据进入 `projects/`，资料进入 `resources/`，状态进入 `progress.md`，闪卡和复习状态只通过 CLI 管理。宿主知识库有强制规则时按初始化规范记录映射，但仍保留 CLI 所需数据契约。
 
 ## 决策规则
 
@@ -98,6 +123,7 @@ learn flashcard add-note/add-knowledge/add-project ... --json
 2. 若启动过会话，按真实经过时间计算分钟数并运行一次 `session end`。无法可靠确定时长时，说明原因并询问，不编造。
 3. 只把稳定、原子、可检索的高价值问答制成闪卡；创建前避免与现有卡片重复。
 4. 只有命令成功后才声称记录、创建或调度完成。
+5. 按质量标准检查本轮新增产物；不合格内容先修订，不因文件已生成就视为有效学习成果。
 
 中断后再次继续时，先读取 `status` 和最近会话；不要重复启动仍处于当前对话上下文中的会话，也不要把未完成内容记为完成。
 
@@ -116,5 +142,7 @@ learn flashcard add-note/add-knowledge/add-project ... --json
 - 一轮同时布置多个主要问题，造成用户无法逐项反馈。
 - 用户未回答就提交复习评分。
 - 仅凭“看过”“感觉懂了”判定掌握。
+- 用通用的 Novice → Master 表格替代针对主题的知识依赖、里程碑和验收任务。
+- 保留“目标 1”“项目 1”“XX 分钟”等模板占位符却声称项目已准备完成。
 - 未获得成功输出就声称进度、会话、闪卡或复习已写入。
 - 同时手工编辑和调用 CLI 写同一份状态数据。

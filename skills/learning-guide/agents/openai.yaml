@@ -1,7 +1,7 @@
 interface:
   display_name: "Learning Guide"
-  short_description: "用单步互动和掌握证据引导学习"
-  default_prompt: "Use $learning-guide to inspect my current learning state and guide one focused study step at a time."
+  short_description: "初始化学习项目并执行高质量教学"
+  default_prompt: "Use $learning-guide to prepare or inspect my learning project, then teach one focused unit with explicit quality and mastery evidence."
 
 policy:
   allow_implicit_invocation: true
