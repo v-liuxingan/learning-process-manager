@@ -4,3 +4,4 @@ export * from './review.js';
 export * from './config.js';
 export * from './common.js';
 export * from './unit.js';
+export * from './teaching-entry.js';

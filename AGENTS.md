@@ -38,6 +38,8 @@ npm link               # 注册全局 `learn` 命令
 | `src/commands/` | 各 CLI 子命令实现 (new, list, progress, session, review, flashcard, stats) |
 | `src/lib/project.ts` | `ProjectManager` - 项目元数据 CRUD，索引文件管理 |
 | `src/lib/learning-unit.ts` | `LearningUnitManager` - 单元依赖、证据与状态迁移 |
+| `src/lib/teaching-entry.ts` | 首次课程、新单元和续学导览状态推导 |
+| `src/lib/teaching-entry.ts` | 首次课程、新单元和续学导览状态推导 |
 | `src/lib/spaced-repetition.ts` | `SpacedRepetitionManager` - FSRS/艾宾浩斯算法，`ReviewIndexManager` - 复习索引 |
 | `src/types/` | TypeScript 类型定义 (project, review, config, common) |
 
@@ -81,6 +83,10 @@ learn init [--json]
 learn config get [配置项] [--json]
 learn doctor [--json]
 ```
+
+`learn status` 与 `learn session start` 的 JSON 返回 `data.teachingEntry`，用于在诊断前区分课程总览、单元导览和续学定位；该字段只提供教学入口，不属于掌握证据。
+
+`learn status` 与 `learn session start` 的 JSON 返回 `data.teachingEntry`，用于在诊断前区分课程总览、单元导览和续学定位；该字段只提供教学入口，不属于掌握证据。
 
 ### 关键类型
 

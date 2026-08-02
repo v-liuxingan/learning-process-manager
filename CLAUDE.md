@@ -37,6 +37,8 @@ npm link               # 注册全局 `learn` 命令
 | `src/cli.ts` | Commander 程序入口，注册所有子命令 |
 | `src/commands/` | 各 CLI 子命令实现 (new, list, progress, session, review, flashcard, stats) |
 | `src/lib/project.ts` | `ProjectManager` - 项目元数据 CRUD，索引文件管理 |
+| `src/lib/learning-unit.ts` | `LearningUnitManager` - 单元依赖、证据与状态迁移 |
+| `src/lib/teaching-entry.ts` | 首次课程、新单元和续学导览状态推导 |
 | `src/lib/spaced-repetition.ts` | `SpacedRepetitionManager` - FSRS/艾宾浩斯算法，`ReviewIndexManager` - 复习索引 |
 | `src/types/` | TypeScript 类型定义 (project, review, config, common) |
 
@@ -46,6 +48,7 @@ npm link               # 注册全局 `learn` 命令
 - **项目目录**: 默认位于当前用户应用数据目录的 `learning-process-manager/projects/<name>/`，也可通过配置项 `defaultProjectsDir`、环境变量 `LEARN_PROJECTS_DIR` 或 `learn new --path` 覆盖
   - `README.md` - 学习路线图
   - `progress.md` - 学习进度追踪
+  - `learning-units.json` - CLI 管理的学习单元、依赖与证据索引
   - `notes/`, `knowledge/`, `flashcards/`, `projects/`, `resources/`
   - `reviews/review-index.json` - 可复习内容索引
 
@@ -65,7 +68,9 @@ npm link               # 注册全局 `learn` 命令
 learn new <主题> [--path <路径>] [--topics <数量>]
 learn list [--json]
 learn progress [项目名] [--stage <阶段>] [--json]
-learn session start --project <项目名>
+learn status [项目名] [--limit <数量>] [--json]
+learn unit add/list/next/evidence/transition ...
+learn session start --project <项目名> [--unit <单元ID>]
 learn session end --project <项目名> --duration <分钟> --summary "<摘要>"
 learn review [项目名] [--due] [--overdue] [--type <类型>] [--limit <数量>] [--json]
 learn flashcard create --project <项目名> --front "<问题>" --back "<答案>"
@@ -76,11 +81,14 @@ learn config get [配置项] [--json]
 learn doctor [--json]
 ```
 
+`learn status` 与 `learn session start` 的 JSON 返回 `data.teachingEntry`，用于在诊断前区分课程总览、单元导览和续学定位；导览不会自动推进单元掌握状态。
+
 ### 关键类型
 
 - `ProjectMeta`: 项目元数据 (name, path, topic, stage, progress, totalHours, etc.)
 - `ReviewableItem`: 可复习内容项 (id, type, title, storageType, content/reference, review state)
 - `ReviewState`: 复习状态，包含 FSRS 或艾宾浩斯算法数据
+- `LearningUnit`: 学习单元、前置依赖、状态和能力证据
 
 ### 学习阶段
 

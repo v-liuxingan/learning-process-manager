@@ -1,7 +1,7 @@
 interface:
   display_name: "Learning CLI"
-  short_description: "管理学习项目、复习队列和 CLI 数据"
-  default_prompt: "Use $learning-cli to inspect my learning projects and show due reviews as JSON."
+  short_description: "管理学习项目、教学入口和复习状态"
+  default_prompt: "Use $learning-cli to inspect my learning project, including its teaching entry, next unit, active session, and due reviews as JSON."
 
 policy:
   allow_implicit_invocation: true

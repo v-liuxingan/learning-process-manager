@@ -3,6 +3,7 @@ import { getProjectManager } from '../lib/project.js';
 import { loadActiveSession, loadStudySessions } from '../lib/session-history.js';
 import { ReviewIndexManager, getSRManager } from '../lib/spaced-repetition.js';
 import { LearningUnitManager } from '../lib/learning-unit.js';
+import { buildTeachingEntryContext } from '../lib/teaching-entry.js';
 import type {
   LearningUnit,
   LearningUnitStats,
@@ -10,6 +11,7 @@ import type {
   ReviewableItem,
   OverdueItem,
   StudySession,
+  TeachingEntryContext,
 } from '../types/index.js';
 
 type StatusData = {
@@ -31,6 +33,7 @@ type StatusData = {
     stats: LearningUnitStats;
     next: LearningUnit | null;
   } | null;
+  teachingEntry: TeachingEntryContext | null;
   availableProjects?: ProjectMeta[];
 };
 
@@ -75,8 +78,7 @@ function chooseProject(projects: ProjectMeta[]): ProjectMeta | null {
   })[0];
 }
 
-function getRecentSession(project: ProjectMeta): StudySession | null {
-  const sessions = loadStudySessions(project.path);
+function getRecentSession(sessions: StudySession[]): StudySession | null {
   if (sessions.length === 0) {
     return null;
   }
@@ -159,6 +161,7 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
       recentSession: null,
       activeSession: null,
       learningUnits: null,
+      teachingEntry: null,
       availableProjects: projects,
     };
   }
@@ -170,6 +173,11 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
   const overdueItems = srManager.getOverdueItems(index);
   const unitManager = new LearningUnitManager(project.path, project.name);
   const unitStats = unitManager.getStats();
+  const activeSession = loadActiveSession(project.path);
+  const sessions = loadStudySessions(project.path);
+  const nextUnit = activeSession?.unitId
+    ? unitManager.getUnit(activeSession.unitId) ?? unitManager.getNextUnit()
+    : unitManager.getNextUnit();
   return {
     project,
     reviews: {
@@ -187,12 +195,17 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
         items: overdueItems.slice(0, limit),
       },
     },
-    recentSession: getRecentSession(project),
-    activeSession: loadActiveSession(project.path),
+    recentSession: getRecentSession(sessions),
+    activeSession,
     learningUnits: {
       stats: unitStats,
-      next: unitManager.getNextUnit(),
+      next: nextUnit,
     },
+    teachingEntry: buildTeachingEntryContext({
+      unit: nextUnit,
+      completedSessions: sessions,
+      activeSession,
+    }),
   };
 }
 
@@ -236,6 +249,10 @@ function registerStatusLikeCommand(program: Command, name: string): void {
           if (data.learningUnits.next) {
             console.log(`Current unit: ${data.learningUnits.next.id} (${data.learningUnits.next.status})`);
           }
+        }
+        if (data.teachingEntry && data.teachingEntry.mode !== 'none') {
+          console.log(`Teaching entry: ${data.teachingEntry.mode}`);
+          console.log(`Teaching sequence: ${data.teachingEntry.sequence.join(' -> ')}`);
         }
         console.log(`Next: ${nextActions[0]}`);
       } catch (error) {

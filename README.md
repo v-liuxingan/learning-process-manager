@@ -6,6 +6,7 @@
 
 - 创建和维护学习项目元数据
 - 管理学习单元、依赖关系、掌握状态和证据引用
+- 识别首次课程、新单元和续学入口，为 Agent 提供机器可读导览顺序
 - 记录学习会话、学习时长、阶段和摘要
 - 管理传统闪卡，以及引用式笔记、知识点、实践项目复习项
 - 查询待复习、过期复习内容，并提交复习评分
@@ -28,6 +29,18 @@ npm 发布包包含两个完整 Skill。安装或同步时复制对应的完整 
 - 单元在本次会话撤去提示后通过解释和应用，只能记为“待巩固”；经过时间间隔后的独立检索仍然通过，才能记为“稳定掌握”。
 - Note 前部维护适合快速回顾的稳定知识，只在证据区保留能够反映关键错误、提示依赖或验收结果的代表性回答；复习调度继续由 CLI 管理。
 - `learning-units.json` 是单元状态和证据索引的事实源；Note 面向快速回顾，只追加具有诊断或验收价值的精选证据，不保存完整对话。
+
+### 教学入口语义
+
+`learn status <project> --json` 和 `learn session start ... --json` 会返回 `data.teachingEntry`：
+
+- `project_and_unit_overview`：首次进入项目，先做课程总览，再做首单元导览。
+- `project_overview`：首次进入项目，但还没有可教学单元。
+- `unit_overview`：进入一个没有历史会话的新单元。
+- `resume`：续学已有历史会话的单元，只需简短定位。
+- `none`：没有需要呈现的教学入口。
+
+`sequence` 给出 `project_overview → unit_overview → diagnostic` 等执行顺序，`sources` 给出应读取的项目内相对文件。导览用于建立方向，不构成掌握证据，也不会自动推进单元状态。
 
 ### 项目初始化问询
 
@@ -178,6 +191,7 @@ reviews/
 - `session-history.json` 保存 `learn session end` 生成的学习会话记录，`learn stats` 的周/月统计基于该文件计算。
 - `active-session.json` 只在会话进行中存在，保存真实开始时间和绑定单元。
 - `learning-units.json` 保存学习单元、依赖、状态和精选证据；由 CLI 管理，不手工修改。
+- 教学入口不单独落库；CLI 根据已结束会话、活动会话和下一单元状态实时推导。
 
 ## 学习单元状态机
 
@@ -265,6 +279,7 @@ src/
     spaced-repetition.ts       # FSRS/艾宾浩斯和复习索引
     file-utils.ts              # 文件锁与原子写入
     session-history.ts         # 学习会话历史
+    teaching-entry.ts          # 课程/单元导览与续学入口推导
   types/                       # 类型定义
 templates/                     # 新学习项目模板
 tests/                         # Vitest 测试
@@ -275,7 +290,7 @@ tests/                         # Vitest 测试
 ```bash
 npm run typecheck
 npm run build
-npm run test -- --run
+npm run test
 ```
 
 ## 许可证
