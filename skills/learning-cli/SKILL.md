@@ -51,7 +51,9 @@ npm link
 - `resume`：当前单元已有历史会话，只需简短续学定位。
 - `none`：当前没有需要呈现的教学入口。
 
-`teachingEntry.sequence` 是建议执行顺序，`sources.projectOverview` 和 `sources.unitOverview` 是项目内相对路径。状态依据真实会话历史和单元状态推导；导览不是掌握证据，不自动改变单元状态。首次单元的活动会话在尚无已结束历史时仍会保留首次导览提示，避免中断后直接跳到诊断。
+`teachingEntry.sequence` 是依据持久化历史推导的默认顺序，`sources.projectOverview` 和 `sources.unitOverview` 是项目内相对路径。导览不是掌握证据，不自动改变单元状态。首次单元的活动会话在尚无已结束历史时仍会保留首次导览提示，避免中断后直接跳到诊断。
+
+CLI 不解析用户自然语言，因此 `resume` 不能覆盖用户明确表达的教学意图。`learning-guide` 识别到“重新开始”“从头学习”或“按新方案重来”时，应重新读取 README 和当前单元 Note，执行 `project_overview → unit_overview → diagnostic`，但保留已有进度、证据和会话历史。“重置或清空进度”是独立的数据操作，不得由 CLI 入口状态或“重新开始学习”自动推断。
 
 ## 命令
 
@@ -91,7 +93,7 @@ learn session end --project <project> --duration <minutes> --summary "<summary>"
 
 `session start --unit` 会绑定单元并保存活动会话；`session end` 使用真实开始时间，结束后写入历史并清除活动状态。`session end` 和项目 `stage` 不自动表示单元已稳定掌握。
 
-开始会话的 JSON 结果会保留启动前的 `teachingEntry`。教学 Agent 应按其顺序完成课程总览、单元导览或续学定位，再进入诊断、检索或应用。
+开始会话的 JSON 结果会保留启动前的 `teachingEntry`。教学 Agent 默认按其顺序完成课程总览、单元导览或续学定位，再进入诊断、检索或应用；用户明确要求重新开始课程时，由 `learning-guide` 覆盖默认 `resume`，不修改 CLI 持久化状态。
 
 `unit evidence` 将精选证据写入 `learning-units.json`；单元配置了 `notePath` 时，同时向 Note 的“学习证据”章节追加简短标记记录。完整对话不得作为证据批量写入。`type` 表示能力层级，`role` 表示初始尝试、误区、纠正、验收或观察；只有独立的 `correction/verification` 能满足状态门槛。进入 `consolidating` 需要独立解释和应用证据，进入 `mastered` 需要延迟独立证据。
 

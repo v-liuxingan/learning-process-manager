@@ -41,7 +41,7 @@ export function registerNewCommand(program: Command): void {
             },
             context: {
               nextActions: [
-                '完成 README.md 的课程总览、路线与最终验收',
+                '完成 README.md 的学习对象定向、课程总览、路线与最终验收',
                 '为每个核心单元准备包含“单元导览”的 Note',
                 `运行 "learn unit add --project ${name} --id <id> --title <title>" 注册学习单元`,
               ],
@@ -52,7 +52,7 @@ export function registerNewCommand(program: Command): void {
           console.log(`📁 路径: ${project.path}`);
           console.log(`🎯 主题: ${topic}`);
           console.log('\n下一步:');
-          console.log(`  • 完成 README.md 的课程总览、路线与最终验收`);
+          console.log(`  • 完成 README.md 的学习对象定向、课程总览、路线与最终验收`);
           console.log(`  • 为每个核心单元准备包含“单元导览”的 Note`);
           console.log(`  • 运行 "learn unit add --project ${name} --id <id> --title <title>" 注册学习单元`);
         }

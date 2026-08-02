@@ -41,6 +41,9 @@ describe('project configuration and persistence', () => {
     expect(fs.existsSync(path.join(project.path, 'learning-units.json'))).toBe(true);
     expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('consolidating');
     expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('课程总览');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('学习对象定向');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('一句话定义');
+    expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('它不是什么');
     expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('第一单元');
     expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('起点与假设');
     expect(fs.readFileSync(path.join(project.path, 'README.md'), 'utf-8')).toContain('诊断任务');

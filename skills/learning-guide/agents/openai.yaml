@@ -1,7 +1,7 @@
 interface:
   display_name: "Learning Guide"
-  short_description: "以课程/单元导览启动高质量教学"
-  default_prompt: "Use $learning-guide to inspect my learning project, orient me to the course and current unit when required, then teach one focused objective with explicit mastery evidence."
+  short_description: "先建心智模型，再以导览启动高质量教学"
+  default_prompt: "Use $learning-guide to inspect my learning project, establish the learning object's minimal mental model, orient me to the course and current unit, then teach one focused objective with explicit mastery evidence."
 
 policy:
   allow_implicit_invocation: true

@@ -81,7 +81,7 @@ learn config get [配置项] [--json]
 learn doctor [--json]
 ```
 
-`learn status` 与 `learn session start` 的 JSON 返回 `data.teachingEntry`，用于在诊断前区分课程总览、单元导览和续学定位；导览不会自动推进单元掌握状态。
+`learn status` 与 `learn session start` 的 JSON 返回 `data.teachingEntry`，用于在诊断前区分课程总览、单元导览和续学定位；它是基于历史的默认入口，导览不会自动推进单元掌握状态。课程总览先建立学习对象的最小心智模型；用户明确要求重新开始时，教学 Agent 覆盖默认 `resume`，但不清空进度。
 
 ### 关键类型
 
