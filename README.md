@@ -155,9 +155,10 @@ learn doctor [--json]
 
 ## 数据存储
 
-默认项目索引会保存在当前用户的应用数据目录中：
+默认项目索引会保存在当前用户的应用数据目录中；在 Codex 工作区沙箱中运行时，会改为保存在当前工作目录的 `.learning-process-manager/` 下，避免写入工作区外的锁文件失败：
 
 ```text
+Codex workspace: <当前工作目录>/.learning-process-manager/learning-projects.json
 Windows: %APPDATA%\learning-process-manager\learning-projects.json
 macOS: ~/Library/Application Support/learning-process-manager/learning-projects.json
 Linux: ${XDG_DATA_HOME:-~/.local/share}/learning-process-manager/learning-projects.json

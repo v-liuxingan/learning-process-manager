@@ -9,6 +9,7 @@ let caseDir = '';
 let originalLearnHome: string | undefined;
 let originalLearnIndexPath: string | undefined;
 let originalLearnProjectsDir: string | undefined;
+let originalCodexPermissionProfile: string | undefined;
 
 beforeEach(() => {
   caseDir = path.join(testRoot, `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -17,9 +18,11 @@ beforeEach(() => {
   originalLearnHome = process.env.LEARN_HOME;
   originalLearnIndexPath = process.env.LEARN_INDEX_PATH;
   originalLearnProjectsDir = process.env.LEARN_PROJECTS_DIR;
+  originalCodexPermissionProfile = process.env.CODEX_PERMISSION_PROFILE;
   delete process.env.LEARN_HOME;
   delete process.env.LEARN_INDEX_PATH;
   delete process.env.LEARN_PROJECTS_DIR;
+  delete process.env.CODEX_PERMISSION_PROFILE;
 
   resetConfigLoader();
   resetProjectManager();
@@ -34,6 +37,9 @@ afterEach(() => {
 
   if (originalLearnProjectsDir === undefined) delete process.env.LEARN_PROJECTS_DIR;
   else process.env.LEARN_PROJECTS_DIR = originalLearnProjectsDir;
+
+  if (originalCodexPermissionProfile === undefined) delete process.env.CODEX_PERMISSION_PROFILE;
+  else process.env.CODEX_PERMISSION_PROFILE = originalCodexPermissionProfile;
 
   resetConfigLoader();
   resetProjectManager();
@@ -63,6 +69,16 @@ describe('public user data paths', () => {
 
     expect(loader.getIndexPath()).toBe(path.join(caseDir, 'custom', 'index.json'));
     expect(loader.getDefaultProjectsDir()).toBe(path.join(caseDir, 'custom-projects'));
+  });
+
+  it('uses a workspace-local data directory in Codex workspace sandboxes', () => {
+    process.env.CODEX_PERMISSION_PROFILE = ':workspace';
+
+    const loader = new ConfigLoader();
+    const workspaceDataDir = path.join(process.cwd(), '.learning-process-manager');
+
+    expect(loader.getIndexPath()).toBe(path.join(workspaceDataDir, 'learning-projects.json'));
+    expect(loader.getDefaultProjectsDir()).toBe(path.join(workspaceDataDir, 'projects'));
   });
 
   it('initializes the configured index without creating projects', () => {

@@ -28,6 +28,7 @@ npm-debug.log*
 # Local/generated run artifacts
 *.raw.json
 .tmp*/
+.learning-process-manager/
 
 # Data files (optional, uncomment if needed)
 # data/

@@ -138,9 +138,10 @@ learn flashcard list-all --project <project> [--type <type>] [--json]
 
 ## 数据布局
 
-默认项目索引存放在当前用户的应用数据目录：
+默认项目索引存放在当前用户的应用数据目录；在 Codex 工作区沙箱中运行时，默认改为当前工作目录的 `.learning-process-manager/`，避免在工作区外创建 `.lock` 文件失败：
 
 ```text
+Codex workspace: <当前工作目录>/.learning-process-manager/learning-projects.json
 Windows: %APPDATA%\learning-process-manager\learning-projects.json
 macOS: ~/Library/Application Support/learning-process-manager/learning-projects.json
 Linux: ${XDG_DATA_HOME:-~/.local/share}/learning-process-manager/learning-projects.json

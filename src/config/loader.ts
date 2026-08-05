@@ -5,10 +5,15 @@ import { UserSettingsSchema, type UserSettings } from '../types/index.js';
 
 const MODULE_NAME = 'learning-cli';
 const APP_DIR_NAME = 'learning-process-manager';
+const WORKSPACE_DATA_DIR_NAME = '.learning-process-manager';
 
 export function getDefaultDataDir(): string {
   if (process.env.LEARN_HOME) {
     return path.resolve(process.env.LEARN_HOME);
+  }
+
+  if (process.env.CODEX_PERMISSION_PROFILE === ':workspace') {
+    return path.join(process.cwd(), WORKSPACE_DATA_DIR_NAME);
   }
 
   if (process.platform === 'win32') {

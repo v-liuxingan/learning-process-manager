@@ -44,8 +44,8 @@ npm link               # 注册全局 `learn` 命令
 
 ### 数据存储
 
-- **项目索引**: 默认位于当前用户应用数据目录的 `learning-process-manager/learning-projects.json`，也可通过配置项 `indexPath` 或环境变量 `LEARN_INDEX_PATH` 覆盖
-- **项目目录**: 默认位于当前用户应用数据目录的 `learning-process-manager/projects/<name>/`，也可通过配置项 `defaultProjectsDir`、环境变量 `LEARN_PROJECTS_DIR` 或 `learn new --path` 覆盖
+- **项目索引**: 默认位于当前用户应用数据目录的 `learning-process-manager/learning-projects.json`；在 Codex 工作区沙箱中运行时，默认位于当前工作目录的 `.learning-process-manager/learning-projects.json`。也可通过配置项 `indexPath` 或环境变量 `LEARN_INDEX_PATH` 覆盖
+- **项目目录**: 默认位于同一数据目录的 `projects/<name>/`；在 Codex 工作区沙箱中即当前工作目录的 `.learning-process-manager/projects/<name>/`。也可通过配置项 `defaultProjectsDir`、环境变量 `LEARN_PROJECTS_DIR` 或 `learn new --path` 覆盖
   - `README.md` - 学习路线图
   - `progress.md` - 学习进度追踪
   - `learning-units.json` - CLI 管理的学习单元、依赖与证据索引
