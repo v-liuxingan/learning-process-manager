@@ -1,6 +1,6 @@
 {
   "name": "learning-process-manager",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "description": "面向 AI Agent 的本地学习过程管理 CLI，支持能力证据与间隔重复",
   "type": "module",
   "packageManager": "npm@10.8.2",
