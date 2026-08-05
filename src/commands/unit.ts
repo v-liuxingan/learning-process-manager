@@ -4,6 +4,8 @@ import { getProjectManager } from '../lib/project.js';
 import type {
   LearningEvidenceRole,
   LearningEvidenceType,
+  LearningInteractionType,
+  MermaidDiagramType,
   LearningUnitStatus,
 } from '../types/index.js';
 
@@ -32,6 +34,27 @@ const EVIDENCE_ROLES: LearningEvidenceRole[] = [
   'correction',
   'verification',
   'observation',
+];
+
+const INTERACTION_TYPES: LearningInteractionType[] = [
+  'explain',
+  'scenario',
+  'predict',
+  'compare',
+  'diagnose',
+  'diagram',
+  'design',
+  'confidence',
+  'delayed_recall',
+];
+
+const MERMAID_TYPES: MermaidDiagramType[] = [
+  'flowchart',
+  'sequence',
+  'state',
+  'class',
+  'er',
+  'mindmap',
 ];
 
 function outputJson(command: string, status: 'success' | 'error', data?: unknown, error?: string): void {
@@ -66,6 +89,13 @@ function syncProjectProgress(projectName: string, units: LearningUnitManager): v
   });
 }
 
+function parseList(value?: string): string[] {
+  return value
+    ?.split(',')
+    .map((item) => item.trim())
+    .filter(Boolean) ?? [];
+}
+
 export function registerUnitCommand(program: Command): void {
   const unit = program.command('unit').description('Manage learning units and mastery evidence');
 
@@ -77,6 +107,10 @@ export function registerUnitCommand(program: Command): void {
     .option('--note <path>', 'Project-relative note path')
     .option('--prerequisites <ids>', 'Comma-separated prerequisite unit ids')
     .option('--next-action <text>', 'Next concrete learning action')
+    .option('--current-objective <text>', 'Current learning objective')
+    .option('--pending-objective <text>', 'Pending learning objective')
+    .option('--allowed-scope <text>', 'Allowed scope for continue/resume behavior')
+    .option('--interaction <type>', `Recommended interaction type (${INTERACTION_TYPES.join('|')})`)
     .action((options: {
       project: string;
       id: string;
@@ -84,10 +118,17 @@ export function registerUnitCommand(program: Command): void {
       note?: string;
       prerequisites?: string;
       nextAction?: string;
+      currentObjective?: string;
+      pendingObjective?: string;
+      allowedScope?: string;
+      interaction?: string;
     }, cmd) => {
       const global = cmd.optsWithGlobals() as GlobalOptions;
       try {
         const { units } = getContext(options.project);
+        if (options.interaction && !INTERACTION_TYPES.includes(options.interaction as LearningInteractionType)) {
+          throw new Error(`Unknown interaction type: ${options.interaction}`);
+        }
         const created = units.addUnit({
           id: options.id,
           title: options.title,
@@ -97,6 +138,10 @@ export function registerUnitCommand(program: Command): void {
             .map((value) => value.trim())
             .filter(Boolean),
           nextAction: options.nextAction,
+          currentObjective: options.currentObjective,
+          pendingObjective: options.pendingObjective,
+          allowedScope: options.allowedScope,
+          recommendedInteractionType: options.interaction as LearningInteractionType | undefined,
         });
         syncProjectProgress(options.project, units);
         if (global.json) outputJson('unit add', 'success', { unit: created, stats: units.getStats() });
@@ -105,6 +150,105 @@ export function registerUnitCommand(program: Command): void {
         const message = error instanceof Error ? error.message : 'Failed to add learning unit';
         if (global.json) outputJson('unit add', 'error', undefined, message);
         else console.error(`Failed to add learning unit: ${message}`);
+        process.exit(1);
+      }
+    });
+
+  unit
+    .command('plan')
+    .requiredOption('-p, --project <name>', 'Project name')
+    .requiredOption('--unit <id>', 'Learning unit id')
+    .option('--current-objective <text>', 'Current learning objective')
+    .option('--completed-objective <text>', 'Completed objective to append')
+    .option('--pending-objective <text>', 'Pending learning objective')
+    .option('--allowed-scope <text>', 'Allowed scope for continue/resume behavior')
+    .option('--interaction <type>', `Recommended interaction type (${INTERACTION_TYPES.join('|')})`)
+    .option('--next-action <text>', 'Next concrete learning action')
+    .action((options: {
+      project: string;
+      unit: string;
+      currentObjective?: string;
+      completedObjective?: string;
+      pendingObjective?: string;
+      allowedScope?: string;
+      interaction?: string;
+      nextAction?: string;
+    }, cmd) => {
+      const global = cmd.optsWithGlobals() as GlobalOptions;
+      try {
+        if (options.interaction && !INTERACTION_TYPES.includes(options.interaction as LearningInteractionType)) {
+          throw new Error(`Unknown interaction type: ${options.interaction}`);
+        }
+        const { units } = getContext(options.project);
+        const updated = units.updatePlan(options.unit, {
+          currentObjective: options.currentObjective,
+          completedObjective: options.completedObjective,
+          pendingObjective: options.pendingObjective,
+          allowedScope: options.allowedScope,
+          recommendedInteractionType: options.interaction as LearningInteractionType | undefined,
+          nextAction: options.nextAction,
+        });
+        if (global.json) outputJson('unit plan', 'success', { unit: updated });
+        else console.log(`Updated learning unit plan: ${updated.id}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to update learning unit plan';
+        if (global.json) outputJson('unit plan', 'error', undefined, message);
+        else console.error(`Failed to update learning unit plan: ${message}`);
+        process.exit(1);
+      }
+    });
+
+  const diagram = unit.command('diagram').description('Manage teaching diagrams for a learning unit');
+
+  diagram
+    .command('add')
+    .requiredOption('-p, --project <name>', 'Project name')
+    .requiredOption('--unit <id>', 'Learning unit id')
+    .requiredOption('--id <id>', 'Stable diagram id')
+    .requiredOption('--title <title>', 'Diagram title')
+    .requiredOption('--purpose <text>', 'Teaching purpose')
+    .requiredOption('--mermaid <type>', `Mermaid type (${MERMAID_TYPES.join('|')})`)
+    .requiredOption('--prompt <text>', 'Learner-facing reading prompt')
+    .requiredOption('--fallback <text>', 'Text fallback when diagrams cannot render')
+    .option('--nodes <items>', 'Comma-separated key nodes')
+    .option('--relations <items>', 'Comma-separated relationships')
+    .option('--teaching-nodes <items>', 'Comma-separated teaching nodes where the diagram applies')
+    .action((options: {
+      project: string;
+      unit: string;
+      id: string;
+      title: string;
+      purpose: string;
+      mermaid: string;
+      prompt: string;
+      fallback: string;
+      nodes?: string;
+      relations?: string;
+      teachingNodes?: string;
+    }, cmd) => {
+      const global = cmd.optsWithGlobals() as GlobalOptions;
+      try {
+        if (!MERMAID_TYPES.includes(options.mermaid as MermaidDiagramType)) {
+          throw new Error(`Unknown Mermaid diagram type: ${options.mermaid}`);
+        }
+        const { units } = getContext(options.project);
+        const created = units.addDiagram(options.unit, {
+          diagramId: options.id,
+          title: options.title,
+          purpose: options.purpose,
+          mermaidType: options.mermaid as MermaidDiagramType,
+          keyNodes: parseList(options.nodes),
+          relationships: parseList(options.relations),
+          teachingNodes: parseList(options.teachingNodes),
+          learnerPrompt: options.prompt,
+          fallback: options.fallback,
+        });
+        if (global.json) outputJson('unit diagram add', 'success', { diagram: created });
+        else console.log(`Added learning unit diagram: ${created.id}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to add learning unit diagram';
+        if (global.json) outputJson('unit diagram add', 'error', undefined, message);
+        else console.error(`Failed to add learning unit diagram: ${message}`);
         process.exit(1);
       }
     });

@@ -11,6 +11,7 @@ import { registerConfigCommand } from './commands/config.js';
 import { registerProjectCommand } from './commands/project.js';
 import { registerStatusCommand } from './commands/status.js';
 import { registerUnitCommand } from './commands/unit.js';
+import { registerCheckpointCommand } from './commands/checkpoint.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json') as { version: string };
@@ -37,5 +38,6 @@ registerConfigCommand(program);
 registerProjectCommand(program);
 registerStatusCommand(program);
 registerUnitCommand(program);
+registerCheckpointCommand(program);
 
 export { program };

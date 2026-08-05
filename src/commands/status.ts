@@ -4,7 +4,9 @@ import { loadActiveSession, loadStudySessions } from '../lib/session-history.js'
 import { ReviewIndexManager, getSRManager } from '../lib/spaced-repetition.js';
 import { LearningUnitManager } from '../lib/learning-unit.js';
 import { buildTeachingEntryContext } from '../lib/teaching-entry.js';
+import { getRecentCheckpoint } from '../lib/checkpoint.js';
 import type {
+  LearningCheckpoint,
   LearningUnit,
   LearningUnitStats,
   ProjectMeta,
@@ -13,6 +15,20 @@ import type {
   StudySession,
   TeachingEntryContext,
 } from '../types/index.js';
+
+type LearningPlanStatus = {
+  currentUnit: Pick<LearningUnit, 'id' | 'title' | 'status'> | null;
+  currentObjective?: string;
+  completedObjectives: string[];
+  pendingObjective?: string;
+  nextAction?: string;
+  allowedScope?: string;
+  recommendedInteractionType?: string;
+  recentCheckpoint: LearningCheckpoint | null;
+  recentEvidence: LearningUnit['evidence'];
+  evidenceGaps: string[];
+  diagrams: LearningUnit['diagrams'];
+};
 
 type StatusData = {
   project: ProjectMeta | null;
@@ -33,6 +49,7 @@ type StatusData = {
     stats: LearningUnitStats;
     next: LearningUnit | null;
   } | null;
+  learningPlan: LearningPlanStatus | null;
   teachingEntry: TeachingEntryContext | null;
   availableProjects?: ProjectMeta[];
 };
@@ -106,6 +123,7 @@ function getNextActions(
 
   if (activeSession) {
     return [
+      `learn checkpoint add --project ${project.name} --event objective_completed --unit ${activeSession.unitId ?? '<unit-id>'} --summary "<checkpoint>" --json`,
       `learn session end --project ${project.name} --summary "<summary>" --json`,
     ];
   }
@@ -143,6 +161,62 @@ function getNextActions(
   ];
 }
 
+function buildEvidenceGaps(unit: LearningUnit | null): string[] {
+  if (!unit) return [];
+  const countsForMastery = (item: LearningUnit['evidence'][number]): boolean =>
+    item.independent && ['correction', 'verification'].includes(item.role);
+  const gaps: string[] = [];
+
+  if (!unit.evidence.some((item) => item.type === 'explain' && countsForMastery(item))) {
+    gaps.push('independent explain evidence');
+  }
+  if (!unit.evidence.some((item) => item.type === 'apply' && countsForMastery(item))) {
+    gaps.push('independent apply evidence');
+  }
+  if (!unit.evidence.some((item) =>
+    item.delayed
+    && item.independent
+    && ['correction', 'verification'].includes(item.role)
+    && ['explain', 'apply', 'transfer', 'artifact'].includes(item.type)
+  )) {
+    gaps.push('delayed independent evidence');
+  }
+  return gaps;
+}
+
+function buildLearningPlan(
+  project: ProjectMeta,
+  unit: LearningUnit | null,
+  activeSession: StudySession | null
+): LearningPlanStatus {
+  const recentCheckpoint = getRecentCheckpoint(project.path, project.name, unit?.id);
+  const completedObjectives = [
+    ...new Set([
+      ...(unit?.plan.completedObjectives ?? []),
+      ...(recentCheckpoint?.completedObjectives ?? []),
+    ]),
+  ];
+  const recentEvidence = unit
+    ? [...unit.evidence]
+        .sort((a, b) => new Date(b.observedAt).getTime() - new Date(a.observedAt).getTime())
+        .slice(0, 5)
+    : [];
+
+  return {
+    currentUnit: unit ? { id: unit.id, title: unit.title, status: unit.status } : null,
+    currentObjective: recentCheckpoint?.objective ?? unit?.plan.currentObjective,
+    completedObjectives,
+    pendingObjective: recentCheckpoint?.pendingObjective ?? unit?.plan.pendingObjective,
+    nextAction: recentCheckpoint?.nextAction ?? unit?.nextAction,
+    allowedScope: unit?.plan.allowedScope ?? (activeSession ? 'continue the active unit unless the user explicitly changes topic' : undefined),
+    recommendedInteractionType: unit?.plan.recommendedInteractionType ?? (unit?.diagrams.length ? 'diagram' : 'scenario'),
+    recentCheckpoint,
+    recentEvidence,
+    evidenceGaps: buildEvidenceGaps(unit),
+    diagrams: unit?.diagrams ?? [],
+  };
+}
+
 function buildStatus(projectName: string | undefined, limit: number): StatusData {
   const manager = getProjectManager();
   const projects = manager.getAllProjects();
@@ -161,6 +235,7 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
       recentSession: null,
       activeSession: null,
       learningUnits: null,
+      learningPlan: null,
       teachingEntry: null,
       availableProjects: projects,
     };
@@ -201,6 +276,7 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
       stats: unitStats,
       next: nextUnit,
     },
+    learningPlan: buildLearningPlan(project, nextUnit, activeSession),
     teachingEntry: buildTeachingEntryContext({
       unit: nextUnit,
       completedSessions: sessions,

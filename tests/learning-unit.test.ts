@@ -3,6 +3,11 @@ import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LearningUnitManager } from '../src/lib/learning-unit.js';
 import {
+  getRecentCheckpoint,
+  loadCheckpoints,
+  recordCheckpoint,
+} from '../src/lib/checkpoint.js';
+import {
   clearActiveSession,
   loadActiveSession,
   startStudySession,
@@ -89,6 +94,60 @@ describe('learning unit state and evidence', () => {
       title: 'Unsafe',
       notePath: '../outside.md',
     })).toThrow(/inside the project/);
+  });
+
+  it('stores plan metadata, diagrams, and structured checkpoints', () => {
+    const manager = new LearningUnitManager(projectPath, 'alpha');
+    manager.ensureIndex();
+    manager.addUnit({
+      id: 'routing',
+      title: 'Request routing',
+      currentObjective: 'Map the request path',
+      pendingObjective: 'Predict leader routing',
+      allowedScope: 'stay inside the routing unit',
+      recommendedInteractionType: 'diagram',
+      nextAction: 'read the topology diagram',
+    });
+
+    manager.updatePlan('routing', {
+      completedObjective: 'Defined tenant boundary',
+      pendingObjective: 'Explain OBProxy routing',
+      nextAction: 'compare MySQL connection routing with OBProxy routing',
+    });
+    const diagram = manager.addDiagram('routing', {
+      diagramId: 'request-path',
+      title: 'Request path',
+      purpose: 'Show how requests move from client to leader replica',
+      mermaidType: 'sequence',
+      teachingNodes: ['unit_overview', 'scenario'],
+      keyNodes: ['Client', 'OBProxy', 'Leader'],
+      relationships: ['Client -> OBProxy', 'OBProxy -> Leader'],
+      learnerPrompt: 'Trace where routing decisions happen.',
+      fallback: 'Client sends SQL to OBProxy, which routes to the leader replica.',
+    });
+    const unit = manager.getUnit('routing');
+
+    expect(unit?.plan.completedObjectives).toContain('Defined tenant boundary');
+    expect(unit?.plan.pendingObjective).toBe('Explain OBProxy routing');
+    expect(unit?.plan.recommendedInteractionType).toBe('diagram');
+    expect(unit?.nextAction).toContain('OBProxy routing');
+    expect(diagram.mermaidType).toBe('sequence');
+    expect(unit?.diagrams[0].fallback).toContain('leader replica');
+
+    const checkpoint = recordCheckpoint(projectPath, 'alpha', {
+      projectName: 'alpha',
+      unitId: 'routing',
+      eventType: 'objective_completed',
+      objective: 'Tenant boundary',
+      summary: 'Learner distinguished tenant from database.',
+      completedObjectives: ['Defined tenant boundary'],
+      pendingObjective: 'Explain OBProxy routing',
+      nextAction: 'Use a request-path diagram',
+      evidenceIds: ['evidence-1'],
+    });
+
+    expect(loadCheckpoints(projectPath, 'alpha').checkpoints).toHaveLength(1);
+    expect(getRecentCheckpoint(projectPath, 'alpha', 'routing')?.id).toBe(checkpoint.id);
   });
 });
 

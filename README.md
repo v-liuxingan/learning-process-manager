@@ -34,6 +34,8 @@ npm 发布包包含两个完整 Skill。安装或同步时复制对应的完整 
 
 `learn status <project> --json` 和 `learn session start ... --json` 会返回 `data.teachingEntry`：
 
+`learn status` and `learn next` also return `data.learningPlan` for "continue" and recovery flows. It includes the current unit, current objective, completed objectives, pending objective, next action, allowed scope, recommended interaction type, recent checkpoint, recent evidence, evidence gaps, and available diagrams. When the user says "continue", follow `learningPlan.nextAction` and `learningPlan.pendingObjective` by default; if the user asks a side question, answer it and then return to the saved plan.
+
 - `project_and_unit_overview`：首次进入项目，先做课程总览，再做首单元导览。
 - `project_overview`：首次进入项目，但还没有可教学单元。
 - `unit_overview`：进入一个没有历史会话的新单元。
@@ -138,6 +140,8 @@ learn unit list --project <项目名>
 learn unit next --project <项目名>
 learn unit evidence --project <项目名> --unit <单元ID> --type <类型> --role <角色> --summary "<证据>" [--assisted] [--delayed]
 learn unit transition --project <项目名> --unit <单元ID> --to <状态>
+learn checkpoint add --project <项目名> --event <事件> --summary "<检查点>" [--unit <单元ID>] [--objective <目标>] [--completed <目标>] [--pending <目标>] [--next-action <动作>]
+learn checkpoint list --project <项目名> [--unit <单元ID>] [--limit <数量>]
 learn session start --project <项目名> [--unit <单元ID>]
 learn session end --project <项目名> [--duration <分钟>] --summary "<摘要>" [--stage <阶段>]
 learn review [项目名] [--due] [--overdue] [--type <类型>] [--limit <数量>] [--json]
@@ -185,6 +189,7 @@ reviews/
   review-index.json
   review-history.json
   session-history.json
+  checkpoints.json
 ```
 
 说明：
@@ -192,6 +197,7 @@ reviews/
 - `review-index.json` 保存可复习内容索引。
 - `review-history.json` 保存复习提交记录。
 - `session-history.json` 保存 `learn session end` 生成的学习会话记录，`learn stats` 的周/月统计基于该文件计算。
+- `checkpoints.json` saves structured learning checkpoints for recovery: objective, evidence ids, next action, and pending work. It must not contain full chat transcripts. If checkpoint writing fails, the Agent must report the failure instead of claiming progress was saved.
 - `active-session.json` 只在会话进行中存在，保存真实开始时间和绑定单元。
 - `learning-units.json` 保存学习单元、依赖、状态和精选证据；由 CLI 管理，不手工修改。
 - 教学入口不单独落库；CLI 根据已结束会话、活动会话和下一单元状态实时推导。

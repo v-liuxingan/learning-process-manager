@@ -60,6 +60,36 @@ export interface StudySession {
 /**
  * 学习统计
  */
+export type LearningCheckpointEventType =
+  | 'session_start'
+  | 'objective_completed'
+  | 'evidence_recorded'
+  | 'misconception'
+  | 'correction'
+  | 'transition'
+  | 'next_action';
+
+export interface LearningCheckpoint {
+  id: string;
+  projectName: string;
+  unitId?: string;
+  sessionId?: string;
+  eventType: LearningCheckpointEventType;
+  objective?: string;
+  summary: string;
+  completedObjectives: string[];
+  pendingObjective?: string;
+  nextAction?: string;
+  evidenceIds: string[];
+  createdAt: string;
+}
+
+export interface LearningCheckpointIndex {
+  version: '1.0';
+  projectId: string;
+  checkpoints: LearningCheckpoint[];
+}
+
 export interface LearningStats {
   /** 总学习时长（小时） */
   totalHours: number;

@@ -4,8 +4,11 @@ import type {
   LearningEvidence,
   LearningEvidenceRole,
   LearningEvidenceType,
+  LearningInteractionType,
   LearningUnit,
+  LearningUnitDiagram,
   LearningUnitIndex,
+  MermaidDiagramType,
   LearningUnitStats,
   LearningUnitStatus,
 } from '../types/index.js';
@@ -58,6 +61,13 @@ export class LearningUnitManager {
               evidence: Array.isArray(unit.evidence)
                 ? unit.evidence.map((item) => ({ ...item, role: item.role ?? 'verification' }))
                 : [],
+              plan: {
+                ...unit.plan,
+                completedObjectives: Array.isArray(unit.plan?.completedObjectives)
+                  ? unit.plan.completedObjectives
+                  : [],
+              },
+              diagrams: Array.isArray(unit.diagrams) ? unit.diagrams : [],
             }))
           : [],
       };
@@ -75,6 +85,10 @@ export class LearningUnitManager {
     notePath?: string;
     prerequisites?: string[];
     nextAction?: string;
+    currentObjective?: string;
+    pendingObjective?: string;
+    allowedScope?: string;
+    recommendedInteractionType?: LearningInteractionType;
   }): LearningUnit {
     this.validateUnitId(options.id);
     const prerequisites = [...new Set(options.prerequisites ?? [])];
@@ -108,6 +122,14 @@ export class LearningUnitManager {
         prerequisites,
         status: 'not_started',
         evidence: [],
+        plan: {
+          currentObjective: options.currentObjective,
+          completedObjectives: [],
+          pendingObjective: options.pendingObjective,
+          allowedScope: options.allowedScope,
+          recommendedInteractionType: options.recommendedInteractionType,
+        },
+        diagrams: [],
         nextAction: options.nextAction,
         createdAt: now,
         updatedAt: now,
@@ -115,6 +137,86 @@ export class LearningUnitManager {
       index.units.push(unit);
       writeJsonAtomic(this.indexPath, index);
       return unit;
+    });
+  }
+
+  updatePlan(id: string, updates: {
+    currentObjective?: string;
+    completedObjective?: string;
+    pendingObjective?: string;
+    allowedScope?: string;
+    recommendedInteractionType?: LearningInteractionType;
+    nextAction?: string;
+  }): LearningUnit {
+    return withFileLock(this.indexPath, () => {
+      const index = this.loadIndex();
+      const unit = index.units.find((item) => item.id === id);
+      if (!unit) {
+        throw new Error(`Learning unit "${id}" does not exist`);
+      }
+
+      const completed = new Set(unit.plan.completedObjectives);
+      if (updates.completedObjective?.trim()) {
+        completed.add(updates.completedObjective.trim());
+      }
+
+      unit.plan = {
+        ...unit.plan,
+        currentObjective: updates.currentObjective?.trim() || unit.plan.currentObjective,
+        completedObjectives: [...completed],
+        pendingObjective: updates.pendingObjective?.trim() || unit.plan.pendingObjective,
+        allowedScope: updates.allowedScope?.trim() || unit.plan.allowedScope,
+        recommendedInteractionType: updates.recommendedInteractionType ?? unit.plan.recommendedInteractionType,
+      };
+      unit.nextAction = updates.nextAction?.trim() || unit.nextAction;
+      unit.updatedAt = new Date().toISOString();
+      writeJsonAtomic(this.indexPath, index);
+      return unit;
+    });
+  }
+
+  addDiagram(id: string, options: {
+    diagramId: string;
+    title: string;
+    purpose: string;
+    teachingNodes?: string[];
+    mermaidType: MermaidDiagramType;
+    keyNodes?: string[];
+    relationships?: string[];
+    learnerPrompt: string;
+    fallback: string;
+  }): LearningUnitDiagram {
+    this.validateUnitId(options.diagramId);
+    if (!options.title.trim()) throw new Error('Diagram title cannot be empty');
+    if (!options.purpose.trim()) throw new Error('Diagram purpose cannot be empty');
+    if (!options.learnerPrompt.trim()) throw new Error('Diagram learner prompt cannot be empty');
+    if (!options.fallback.trim()) throw new Error('Diagram fallback cannot be empty');
+
+    return withFileLock(this.indexPath, () => {
+      const index = this.loadIndex();
+      const unit = index.units.find((item) => item.id === id);
+      if (!unit) {
+        throw new Error(`Learning unit "${id}" does not exist`);
+      }
+      if (unit.diagrams.some((diagram) => diagram.id === options.diagramId)) {
+        throw new Error(`Learning unit diagram "${options.diagramId}" already exists`);
+      }
+
+      const diagram: LearningUnitDiagram = {
+        id: options.diagramId,
+        title: options.title.trim(),
+        purpose: options.purpose.trim(),
+        teachingNodes: options.teachingNodes ?? [],
+        mermaidType: options.mermaidType,
+        keyNodes: options.keyNodes ?? [],
+        relationships: options.relationships ?? [],
+        learnerPrompt: options.learnerPrompt.trim(),
+        fallback: options.fallback.trim(),
+      };
+      unit.diagrams.push(diagram);
+      unit.updatedAt = new Date().toISOString();
+      writeJsonAtomic(this.indexPath, index);
+      return diagram;
     });
   }
 

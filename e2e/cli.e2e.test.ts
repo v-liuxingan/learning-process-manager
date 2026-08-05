@@ -161,16 +161,46 @@ describe('packaged CLI', () => {
       '--id', 'foundation',
       '--title', 'Foundation',
       '--note', 'notes/foundation.md',
+      '--current-objective', 'Build the first mental model',
+      '--pending-objective', 'Explain the foundation in your own words',
+      '--allowed-scope', 'stay on the foundation unit',
+      '--interaction', 'diagram',
+      '--next-action', 'read the foundation diagram',
+    ]);
+    runLearn([
+      'unit', 'diagram', 'add',
+      '--project', projectName,
+      '--unit', 'foundation',
+      '--id', 'foundation-flow',
+      '--title', 'Foundation flow',
+      '--purpose', 'Show the first causal chain',
+      '--mermaid', 'flowchart',
+      '--prompt', 'Read the diagram from input to outcome.',
+      '--fallback', 'Input flows through the foundation concept to the outcome.',
+      '--nodes', 'Input,Foundation,Outcome',
+      '--relations', 'Input -> Foundation,Foundation -> Outcome',
     ]);
 
     const before = runLearn(['status', projectName]) as {
       data: {
         learningUnits: { next: { id: string } };
+        learningPlan: {
+          currentObjective: string;
+          pendingObjective: string;
+          recommendedInteractionType: string;
+          diagrams: { id: string; fallback: string }[];
+          evidenceGaps: string[];
+        };
         teachingEntry: { mode: string; sequence: string[]; sources: { unitOverview?: string } };
       };
       context: { nextActions: string[] };
     };
     expect(before.data.learningUnits.next.id).toBe('foundation');
+    expect(before.data.learningPlan.currentObjective).toBe('Build the first mental model');
+    expect(before.data.learningPlan.pendingObjective).toBe('Explain the foundation in your own words');
+    expect(before.data.learningPlan.recommendedInteractionType).toBe('diagram');
+    expect(before.data.learningPlan.diagrams[0].id).toBe('foundation-flow');
+    expect(before.data.learningPlan.evidenceGaps).toContain('independent explain evidence');
     expect(before.data.teachingEntry.mode).toBe('project_and_unit_overview');
     expect(before.data.teachingEntry.sequence).toEqual([
       'project_overview',
@@ -196,7 +226,35 @@ describe('packaged CLI', () => {
     };
     expect(active.data.activeSession.unitId).toBe('foundation');
     expect(active.data.teachingEntry.mode).toBe('project_and_unit_overview');
-    expect(active.context.nextActions[0]).toContain('session end');
+    expect(active.context.nextActions[0]).toContain('checkpoint add');
+    const checkpoint = runLearn([
+      'checkpoint', 'add',
+      '--project', projectName,
+      '--event', 'objective_completed',
+      '--unit', 'foundation',
+      '--summary', 'Completed the first mental model',
+      '--objective', 'Build the first mental model',
+      '--completed', 'Build the first mental model',
+      '--pending', 'Explain the foundation in your own words',
+      '--next-action', 'Ask for an own-words explanation',
+    ]) as {
+      status: string;
+      data: { checkpoint: { eventType: string; pendingObjective: string } };
+    };
+    expect(checkpoint.status).toBe('success');
+    expect(checkpoint.data.checkpoint.eventType).toBe('objective_completed');
+    const checkpointStatus = runLearn(['status', projectName]) as {
+      data: {
+        learningPlan: {
+          completedObjectives: string[];
+          pendingObjective: string;
+          recentCheckpoint: { summary: string };
+        };
+      };
+    };
+    expect(checkpointStatus.data.learningPlan.completedObjectives).toContain('Build the first mental model');
+    expect(checkpointStatus.data.learningPlan.pendingObjective).toBe('Explain the foundation in your own words');
+    expect(checkpointStatus.data.learningPlan.recentCheckpoint.summary).toBe('Completed the first mental model');
     runLearn(['session', 'end', '--project', projectName, '--duration', '12', '--summary', 'Foundation session']);
 
     const resumed = runLearn(['status', projectName]) as {

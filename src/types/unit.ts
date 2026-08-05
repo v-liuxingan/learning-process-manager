@@ -32,6 +32,45 @@ export interface LearningEvidence {
   sessionId?: string;
 }
 
+export type LearningInteractionType =
+  | 'explain'
+  | 'scenario'
+  | 'predict'
+  | 'compare'
+  | 'diagnose'
+  | 'diagram'
+  | 'design'
+  | 'confidence'
+  | 'delayed_recall';
+
+export type MermaidDiagramType =
+  | 'flowchart'
+  | 'sequence'
+  | 'state'
+  | 'class'
+  | 'er'
+  | 'mindmap';
+
+export interface LearningUnitDiagram {
+  id: string;
+  title: string;
+  purpose: string;
+  teachingNodes: string[];
+  mermaidType: MermaidDiagramType;
+  keyNodes: string[];
+  relationships: string[];
+  learnerPrompt: string;
+  fallback: string;
+}
+
+export interface LearningUnitPlan {
+  currentObjective?: string;
+  completedObjectives: string[];
+  pendingObjective?: string;
+  allowedScope?: string;
+  recommendedInteractionType?: LearningInteractionType;
+}
+
 export interface LearningUnit {
   id: string;
   title: string;
@@ -39,6 +78,8 @@ export interface LearningUnit {
   prerequisites: string[];
   status: LearningUnitStatus;
   evidence: LearningEvidence[];
+  plan: LearningUnitPlan;
+  diagrams: LearningUnitDiagram[];
   nextAction?: string;
   createdAt: string;
   updatedAt: string;

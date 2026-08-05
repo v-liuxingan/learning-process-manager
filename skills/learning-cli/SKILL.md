@@ -53,6 +53,8 @@ npm link
 
 `teachingEntry.sequence` 是依据持久化历史推导的默认顺序，`sources.projectOverview` 和 `sources.unitOverview` 是项目内相对路径。导览不是掌握证据，不自动改变单元状态。首次单元的活动会话在尚无已结束历史时仍会保留首次导览提示，避免中断后直接跳到诊断。
 
+`learn status` 和 `learn next` 还会返回 `data.learningPlan`，这是“继续”和恢复会话的机器可读契约。字段包括 current unit、current objective、completed objectives、pending objective、next action、allowed scope、recommended interaction type、recent checkpoint、recent evidence、evidence gaps 和 diagrams。用户说“继续”时，默认沿 `learningPlan.nextAction` 和 `learningPlan.pendingObjective` 推进当前计划；用户中途追问时，先回答追问，再回到该计划。
+
 CLI 不解析用户自然语言，因此 `resume` 不能覆盖用户明确表达的教学意图。`learning-guide` 识别到“重新开始”“从头学习”或“按新方案重来”时，应重新读取 README 和当前单元 Note，执行 `project_overview → unit_overview → diagnostic`，但保留已有进度、证据和会话历史。“重置或清空进度”是独立的数据操作，不得由 CLI 入口状态或“重新开始学习”自动推断。
 
 ## 命令
@@ -76,6 +78,10 @@ learn unit list --project <project> [--json]
 learn unit next --project <project> [--json]
 learn unit evidence --project <project> --unit <id> --type <recall|explain|apply|transfer|artifact> --role <attempt|misconception|correction|verification|observation> --summary "<summary>" [--reference <ref>] [--assisted] [--delayed] [--session <id>] [--json]
 learn unit transition --project <project> --unit <id> --to <status> [--json]
+learn unit plan --project <project> --unit <id> [--current-objective "<text>"] [--completed-objective "<text>"] [--pending-objective "<text>"] [--allowed-scope "<text>"] [--interaction <type>] [--next-action "<text>"] [--json]
+learn unit diagram add --project <project> --unit <id> --id <id> --title "<title>" --purpose "<purpose>" --mermaid <type> --prompt "<prompt>" --fallback "<fallback>" [--nodes <items>] [--relations <items>] [--teaching-nodes <items>] [--json]
+learn checkpoint add --project <project> --event <event> --summary "<summary>" [--unit <id>] [--session <id>] [--objective "<text>"] [--completed <items>] [--pending "<text>"] [--next-action "<text>"] [--evidence <ids>] [--json]
+learn checkpoint list --project <project> [--unit <id>] [--limit <count>] [--json]
 ```
 
 使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会使用当前有效配置中的 `defaultProjectsDir`。使用 `learn project import --path <dir>` 注册已有学习目录；该命令会补齐缺失的最小目录结构，但不会覆盖已有 `README.md`、`progress.md` 或 `reviews/review-index.json`。项目索引路径 `indexPath` 和项目目录默认值 `defaultProjectsDir` 是两个概念，不要混用。
@@ -96,6 +102,10 @@ learn session end --project <project> --duration <minutes> --summary "<summary>"
 开始会话的 JSON 结果会保留启动前的 `teachingEntry`。教学 Agent 默认按其顺序完成课程总览、单元导览或续学定位，再进入诊断、检索或应用；用户明确要求重新开始课程时，由 `learning-guide` 覆盖默认 `resume`，不修改 CLI 持久化状态。
 
 `unit evidence` 将精选证据写入 `learning-units.json`；单元配置了 `notePath` 时，同时向 Note 的“学习证据”章节追加简短标记记录。完整对话不得作为证据批量写入。`type` 表示能力层级，`role` 表示初始尝试、误区、纠正、验收或观察；只有独立的 `correction/verification` 能满足状态门槛。进入 `consolidating` 需要独立解释和应用证据，进入 `mastered` 需要延迟独立证据。
+
+完成教学子目标、形成独立证据、发生误解纠正、执行单元状态迁移或改变下一动作后，使用 `learn checkpoint add ... --json` 写入结构化 checkpoint。checkpoint 只保存目标、证据 ID、下一动作和恢复线索，不保存完整聊天记录；如果命令失败，必须明确告诉用户“未保存”，不能假装进度已经同步。
+
+复杂单元可用 `learn unit diagram add ...` 声明教学图例协议。图例必须包含教学目的、适用教学节点、Mermaid 类型、关键节点、关系、读图提示和文字降级说明；图例用于建立关系模型，不作为装饰。
 
 ### 复习队列
 
@@ -161,11 +171,12 @@ resources/
 reviews/review-index.json
 reviews/review-history.json
 reviews/session-history.json
+reviews/checkpoints.json
 ```
 
 `reviews/review-index.json` 保存 `ReviewableItem` 条目。`storageType: "inline"` 表示直接存储问题和答案；`storageType: "reference"` 表示存储文档路径，以及可选的章节或行号范围。
 
-`reviews/review-history.json` 保存复习提交记录。`reviews/session-history.json` 保存学习会话记录。项目索引、复习索引、复习历史和会话历史写入使用文件锁和原子写入；并发 Agent 仍应优先通过 CLI 操作，不要手工编辑这些 JSON 文件。
+`reviews/review-history.json` 保存复习提交记录。`reviews/session-history.json` 保存学习会话记录。`reviews/checkpoints.json` 保存结构化学习检查点。项目索引、复习索引、复习历史、会话历史和检查点写入使用文件锁和原子写入；并发 Agent 仍应优先通过 CLI 操作，不要手工编辑这些 JSON 文件。
 
 `learning-units.json` 保存单元依赖、状态与证据，由 `learn unit` 命令管理。`reviews/active-session.json` 仅在会话进行中存在。不要手工编辑这两个文件。
 

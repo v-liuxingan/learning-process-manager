@@ -4,3 +4,4 @@ export * from './spaced-repetition.js';
 export * from './formatter.js';
 export * from './learning-unit.js';
 export * from './teaching-entry.js';
+export * from './checkpoint.js';
