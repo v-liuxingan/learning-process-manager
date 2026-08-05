@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import type {
   ProjectMeta,
   ProjectIndex,
@@ -9,6 +10,7 @@ import type {
 import { DEFAULT_PROJECT_INDEX, DEFAULT_SETTINGS } from '../types/index.js';
 import { getConfigLoader } from '../config/index.js';
 import { ensureDir, withFileLock, writeJsonAtomic } from './file-utils.js';
+import { LearningUnitManager } from './learning-unit.js';
 
 /**
  * 确保目录存在
@@ -230,12 +232,12 @@ export class ProjectManager {
     // 创建基础文件
     const readmePath = path.join(projectPath, 'README.md');
     if (!fs.existsSync(readmePath)) {
-      fs.writeFileSync(readmePath, this.generateReadmeTemplate(), 'utf-8');
+      fs.writeFileSync(readmePath, this.generateReadmeTemplate(projectName), 'utf-8');
     }
 
     const progressPath = path.join(projectPath, 'progress.md');
     if (!fs.existsSync(progressPath)) {
-      fs.writeFileSync(progressPath, this.generateProgressTemplate(), 'utf-8');
+      fs.writeFileSync(progressPath, this.generateProgressTemplate(projectName), 'utf-8');
     }
 
     const reviewIndexPath = path.join(projectPath, 'reviews', 'review-index.json');
@@ -246,76 +248,40 @@ export class ProjectManager {
         'utf-8'
       );
     }
+
+    new LearningUnitManager(projectPath, projectName).ensureIndex();
   }
 
   /**
    * 生成 README 模板
    */
-  private generateReadmeTemplate(): string {
-    return `# 学习项目
-
-## 学习目标
-
-- [ ] 目标 1
-- [ ] 目标 2
-
-## 学习路线
-
-1. 基础概念
-2. 核心原理
-3. 实践应用
-4. 深入理解
-
-## 学习资源
-
-- [资源名称](链接)
-
-## 进度里程碑
-
-| 里程碑 | 目标日期 | 状态 |
-|--------|----------|------|
-| 基础掌握 | - | 🌱 进行中 |
-| 独立实践 | - | ⏳ 待开始 |
-| 深入理解 | - | ⏳ 待开始 |
-
-## 学习笔记索引
-
-<!-- 由 CLI 自动维护 -->
-
-## 复习记录
-
-<!-- 由 CLI 自动维护 -->
-`;
+  private generateReadmeTemplate(projectName: string): string {
+    return this.loadTemplate('project/README.md', projectName, `# 学习项目: ${projectName}\n`);
   }
 
   /**
    * 生成进度模板
    */
-  private generateProgressTemplate(): string {
-    return `# 学习进度追踪
+  private generateProgressTemplate(projectName: string): string {
+    return this.loadTemplate('project/progress.md', projectName, '# 学习进度追踪\n');
+  }
 
-## 📅 学习记录
+  private loadTemplate(relativePath: string, projectName: string, fallback: string): string {
+    const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+    const candidates = [
+      path.resolve(moduleDir, '..', 'templates', relativePath),
+      path.resolve(moduleDir, '..', '..', 'templates', relativePath),
+    ];
+    const templatePath = candidates.find((candidate) => fs.existsSync(candidate));
+    if (!templatePath) return fallback;
 
-<!-- 新的学习记录将添加在此处 -->
-
-## 📊 总体进度
-
-| 学习主题 | 状态 | 开始日期 | 预计完成 | 实际完成 | 掌握程度 |
-| -------- | ---- | -------- | -------- | -------- | -------- |
-<!-- 进度表格由 CLI 自动维护 -->
-
-## 🎯 下一阶段目标
-
-<!-- 待填写 -->
-
-## 💡 学习心得
-
-<!-- 待填写 -->
-
-## 🧠 费曼技巧练习
-
-<!-- 用简单语言解释核心概念 -->
-`;
+    const now = new Date().toISOString();
+    return fs.readFileSync(templatePath, 'utf-8')
+      .replaceAll('{{projectName}}', projectName)
+      .replaceAll('{{topic}}', projectName)
+      .replaceAll('{{createdAt}}', now)
+      .replaceAll('{{updatedAt}}', now)
+      .replaceAll('{{date}}', now.slice(0, 10));
   }
 
   /**
@@ -386,7 +352,9 @@ export class ProjectManager {
   updateProgress(name: string, options: {
     duration?: number;
     topicsCompleted?: number;
+    topicsTotal?: number;
     stage?: LearningStage;
+    touchLastStudyDate?: boolean;
   }): ProjectMeta {
     return withFileLock(this.indexPath, () => {
       this.index = this.loadIndex();
@@ -396,9 +364,11 @@ export class ProjectManager {
       }
 
       const project = this.index.projects[index];
-      const updates: Partial<ProjectMeta> = {
-        lastStudyDate: new Date().toISOString(),
-      };
+      const updates: Partial<ProjectMeta> = {};
+
+      if (options.touchLastStudyDate !== false) {
+        updates.lastStudyDate = new Date().toISOString();
+      }
 
       if (options.duration) {
         updates.totalHours = project.totalHours + options.duration / 60;
@@ -406,8 +376,16 @@ export class ProjectManager {
 
       if (options.topicsCompleted !== undefined) {
         updates.topicsCompleted = options.topicsCompleted;
-        if (project.topicsTotal > 0) {
-          updates.progress = Math.round((options.topicsCompleted / project.topicsTotal) * 100);
+        const total = options.topicsTotal ?? project.topicsTotal;
+        if (total > 0) {
+          updates.progress = Math.round((options.topicsCompleted / total) * 100);
+        }
+      }
+
+      if (options.topicsTotal !== undefined) {
+        updates.topicsTotal = options.topicsTotal;
+        if (options.topicsCompleted === undefined && options.topicsTotal > 0) {
+          updates.progress = Math.round((project.topicsCompleted / options.topicsTotal) * 100);
         }
       }
 

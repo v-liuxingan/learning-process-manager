@@ -53,3 +53,11 @@ export function writeJsonAtomic(filePath: string, value: unknown): void {
   fs.writeFileSync(tempPath, JSON.stringify(value, null, 2), 'utf-8');
   fs.renameSync(tempPath, filePath);
 }
+
+export function writeTextAtomic(filePath: string, value: string): void {
+  ensureDir(path.dirname(filePath));
+
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  fs.writeFileSync(tempPath, value, 'utf-8');
+  fs.renameSync(tempPath, filePath);
+}

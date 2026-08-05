@@ -289,11 +289,7 @@ export class Formatter {
     }
 
     if (project.progress < 100) {
-      actions.push('继续学习下一主题');
-    }
-
-    if (project.stage === 'novice' && project.progress >= 30) {
-      actions.push('考虑升级到 Beginner 阶段');
+      actions.push(`运行 "learn status ${project.name}" 获取下一学习动作`);
     }
 
     if (actions.length === 0) {

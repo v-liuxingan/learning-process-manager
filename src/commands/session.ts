@@ -1,6 +1,12 @@
 import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
-import { recordStudySession } from '../lib/session-history.js';
+import {
+  clearActiveSession,
+  loadActiveSession,
+  recordStudySession,
+  startStudySession,
+} from '../lib/session-history.js';
+import { LearningUnitManager } from '../lib/learning-unit.js';
 import type { LearningStage } from '../types/index.js';
 
 export function registerSessionCommand(program: Command): void {
@@ -11,6 +17,7 @@ export function registerSessionCommand(program: Command): void {
     .option('-d, --duration <minutes>', '学习时长（分钟）', parseInt)
     .option('-s, --summary <text>', '学习摘要')
     .option('-n, --note <text>', '学习笔记')
+    .option('-u, --unit <id>', '绑定的学习单元')
     .option('--stage <stage>', '更新学习阶段')
     .action((action: string, _args, cmd) => {
       const options = cmd.optsWithGlobals() as {
@@ -18,6 +25,7 @@ export function registerSessionCommand(program: Command): void {
         duration?: number;
         summary?: string;
         note?: string;
+        unit?: string;
         stage?: string;
         json?: boolean;
       };
@@ -34,6 +42,25 @@ export function registerSessionCommand(program: Command): void {
             if (!projectStart) {
               throw new Error(`项目 "${options.project}" 不存在`);
             }
+            if (loadActiveSession(projectStart.path)) {
+              throw new Error('已有进行中的学习会话，请先结束后再开始');
+            }
+            const unitManager = new LearningUnitManager(projectStart.path, projectStart.name);
+            if (options.unit) {
+              const learningUnit = unitManager.getUnit(options.unit);
+              if (!learningUnit) {
+                throw new Error(`学习单元 "${options.unit}" 不存在`);
+              }
+              if (learningUnit.status === 'not_started' || learningUnit.status === 'remediation') {
+                unitManager.transition(options.unit, 'learning');
+              }
+            }
+            const started = startStudySession(projectStart.path, {
+              id: `session-${Date.now()}`,
+              projectName: projectStart.name,
+              unitId: options.unit,
+              startedAt: new Date().toISOString(),
+            });
             if (options.json) {
               console.log(JSON.stringify({
                 version: '1.0',
@@ -43,6 +70,7 @@ export function registerSessionCommand(program: Command): void {
                 data: {
                   action: 'start',
                   project: projectStart,
+                  session: started,
                 },
                 context: {
                   project: projectStart.name,
@@ -70,35 +98,35 @@ export function registerSessionCommand(program: Command): void {
               throw new Error(`项目 "${options.project}" 不存在`);
             }
 
-            const updates: {
-              duration?: number;
-              stage?: LearningStage;
-            } = {};
-
-            if (options.duration) {
-              updates.duration = options.duration;
-            }
-
-            if (options.stage) {
-              updates.stage = options.stage as LearningStage;
-            }
-
-            const updated = manager.updateProgress(options.project, updates);
             const endedAt = new Date();
-            const startedAt = new Date(endedAt);
-            if (options.duration) {
-              startedAt.setMinutes(startedAt.getMinutes() - options.duration);
-            }
+            const active = loadActiveSession(projectEnd.path);
+            const startedAt = active
+              ? new Date(active.startedAt)
+              : new Date(endedAt);
+            if (!active && options.duration) startedAt.setMinutes(startedAt.getMinutes() - options.duration);
+            const measuredDuration = Math.max(
+              1,
+              Math.round((endedAt.getTime() - startedAt.getTime()) / 60000)
+            );
+            const computedDuration = active ? measuredDuration : (options.duration ?? measuredDuration);
+            const updates: { duration: number; stage?: LearningStage } = {
+              duration: computedDuration,
+            };
+            if (options.stage) updates.stage = options.stage as LearningStage;
+            const updated = manager.updateProgress(options.project, updates);
 
-            recordStudySession(projectEnd.path, {
-              id: `session-${endedAt.getTime()}`,
+            const session = {
+              id: active?.id ?? `session-${endedAt.getTime()}`,
               projectName: projectEnd.name,
               startedAt: startedAt.toISOString(),
               endedAt: endedAt.toISOString(),
-              duration: options.duration,
+              duration: computedDuration,
               note: options.note,
               summary: options.summary,
-            });
+              unitId: active?.unitId ?? options.unit,
+            };
+            recordStudySession(projectEnd.path, session);
+            if (active) clearActiveSession(projectEnd.path);
 
             if (options.json) {
               console.log(JSON.stringify({
@@ -110,8 +138,9 @@ export function registerSessionCommand(program: Command): void {
                   action: 'end',
                   project: updated,
                   session: {
-                    duration: options.duration,
+                    duration: computedDuration,
                     summary: options.summary,
+                    unitId: session.unitId,
                   },
                 },
                 context: {
@@ -126,9 +155,7 @@ export function registerSessionCommand(program: Command): void {
               }, null, 2));
             } else {
               console.log(`✅ 学习会话结束`);
-              if (options.duration) {
-                console.log(`⏱️ 学习时长: ${options.duration} 分钟`);
-              }
+              console.log(`⏱️ 学习时长: ${computedDuration} 分钟`);
               console.log(`📊 更新后进度: ${updated.progress}%`);
               console.log(`📚 总学习时长: ${updated.totalHours.toFixed(1)} 小时`);
             }

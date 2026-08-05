@@ -7,6 +7,10 @@ function getHistoryPath(projectPath: string): string {
   return path.join(projectPath, 'reviews', 'session-history.json');
 }
 
+function getActiveSessionPath(projectPath: string): string {
+  return path.join(projectPath, 'reviews', 'active-session.json');
+}
+
 export function loadStudySessions(projectPath: string): StudySession[] {
   const historyPath = getHistoryPath(projectPath);
   if (!fs.existsSync(historyPath)) {
@@ -27,5 +31,35 @@ export function recordStudySession(projectPath: string, session: StudySession): 
     const sessions = loadStudySessions(projectPath);
     sessions.push(session);
     writeJsonAtomic(historyPath, sessions);
+  });
+}
+
+export function loadActiveSession(projectPath: string): StudySession | null {
+  const activePath = getActiveSessionPath(projectPath);
+  if (!fs.existsSync(activePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(activePath, 'utf-8')) as StudySession;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'unknown parse error';
+    throw new Error(`Failed to load active session: ${message}`, { cause: error });
+  }
+}
+
+export function startStudySession(projectPath: string, session: StudySession): StudySession {
+  const activePath = getActiveSessionPath(projectPath);
+  return withFileLock(activePath, () => {
+    if (fs.existsSync(activePath)) {
+      const active = loadActiveSession(projectPath);
+      throw new Error(`A learning session is already active${active?.unitId ? ` for unit "${active.unitId}"` : ''}`);
+    }
+    writeJsonAtomic(activePath, session);
+    return session;
+  });
+}
+
+export function clearActiveSession(projectPath: string): void {
+  const activePath = getActiveSessionPath(projectPath);
+  withFileLock(activePath, () => {
+    if (fs.existsSync(activePath)) fs.unlinkSync(activePath);
   });
 }

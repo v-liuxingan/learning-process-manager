@@ -1,8 +1,16 @@
 import type { Command } from 'commander';
 import { getProjectManager } from '../lib/project.js';
-import { loadStudySessions } from '../lib/session-history.js';
+import { loadActiveSession, loadStudySessions } from '../lib/session-history.js';
 import { ReviewIndexManager, getSRManager } from '../lib/spaced-repetition.js';
-import type { ProjectMeta, ReviewableItem, OverdueItem, StudySession } from '../types/index.js';
+import { LearningUnitManager } from '../lib/learning-unit.js';
+import type {
+  LearningUnit,
+  LearningUnitStats,
+  ProjectMeta,
+  ReviewableItem,
+  OverdueItem,
+  StudySession,
+} from '../types/index.js';
 
 type StatusData = {
   project: ProjectMeta | null;
@@ -18,6 +26,11 @@ type StatusData = {
     };
   } | null;
   recentSession: StudySession | null;
+  activeSession: StudySession | null;
+  learningUnits: {
+    stats: LearningUnitStats;
+    next: LearningUnit | null;
+  } | null;
   availableProjects?: ProjectMeta[];
 };
 
@@ -75,11 +88,23 @@ function getRecentSession(project: ProjectMeta): StudySession | null {
   })[0];
 }
 
-function getNextActions(project: ProjectMeta | null, reviews: StatusData['reviews']): string[] {
+function getNextActions(
+  project: ProjectMeta | null,
+  reviews: StatusData['reviews'],
+  activeSession: StudySession | null,
+  nextUnit: LearningUnit | null,
+  unitTotal: number
+): string[] {
   if (!project) {
     return [
       'learn project import --path <dir> --json',
       'learn new <topic> --json',
+    ];
+  }
+
+  if (activeSession) {
+    return [
+      `learn session end --project ${project.name} --summary "<summary>" --json`,
     ];
   }
 
@@ -97,9 +122,22 @@ function getNextActions(project: ProjectMeta | null, reviews: StatusData['review
     ];
   }
 
+
+  if (nextUnit) {
+    return [
+      `learn session start --project ${project.name} --unit ${nextUnit.id} --json`,
+      `learn unit next --project ${project.name} --json`,
+    ];
+  }
+
+  if (unitTotal === 0) {
+    return [
+      `learn unit add --project ${project.name} --id <id> --title "<title>" --json`,
+    ];
+  }
+
   return [
-    `learn session start --project ${project.name} --json`,
-    `learn session end --project ${project.name} --duration <minutes> --summary "<summary>" --json`,
+    `learn unit list --project ${project.name} --json`,
   ];
 }
 
@@ -119,6 +157,8 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
       project: null,
       reviews: null,
       recentSession: null,
+      activeSession: null,
+      learningUnits: null,
       availableProjects: projects,
     };
   }
@@ -128,6 +168,8 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
   const srManager = getSRManager();
   const dueItems = srManager.getDueItems(index);
   const overdueItems = srManager.getOverdueItems(index);
+  const unitManager = new LearningUnitManager(project.path, project.name);
+  const unitStats = unitManager.getStats();
   return {
     project,
     reviews: {
@@ -146,6 +188,11 @@ function buildStatus(projectName: string | undefined, limit: number): StatusData
       },
     },
     recentSession: getRecentSession(project),
+    activeSession: loadActiveSession(project.path),
+    learningUnits: {
+      stats: unitStats,
+      next: unitManager.getNextUnit(),
+    },
   };
 }
 
@@ -160,7 +207,13 @@ function registerStatusLikeCommand(program: Command, name: string): void {
 
       try {
         const data = buildStatus(projectName, limit);
-        const nextActions = getNextActions(data.project, data.reviews);
+        const nextActions = getNextActions(
+          data.project,
+          data.reviews,
+          data.activeSession,
+          data.learningUnits?.next ?? null,
+          data.learningUnits?.stats.total ?? 0
+        );
 
         if (options.json) {
           printJson(name, data, nextActions);
@@ -177,6 +230,12 @@ function registerStatusLikeCommand(program: Command, name: string): void {
         if (data.reviews) {
           console.log(`Due reviews: ${data.reviews.due.total}`);
           console.log(`Overdue reviews: ${data.reviews.overdue.total}`);
+        }
+        if (data.learningUnits) {
+          console.log(`Learning units: ${data.learningUnits.stats.mastered}/${data.learningUnits.stats.total} mastered`);
+          if (data.learningUnits.next) {
+            console.log(`Current unit: ${data.learningUnits.next.id} (${data.learningUnits.next.status})`);
+          }
         }
         console.log(`Next: ${nextActions[0]}`);
       } catch (error) {

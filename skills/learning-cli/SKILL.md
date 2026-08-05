@@ -27,14 +27,17 @@ npm link
 
 1. 用 `learn list --json` 获取项目列表。
 2. 用 `learn progress [project] --json` 查看学习进度。
-3. 用 `learn session start|end` 开始或结束学习会话。
-4. 用 `learn flashcard ...` 添加可复习内容。
-5. 用 `learn review ... --json` 查询待复习或过期复习项。
-6. 用户完成复习后，用 `learn review-submit <id> <rating> --project <project>` 提交结果。
+3. 用 `learn unit next/list` 读取单元状态，用 `unit evidence/transition` 提交证据与状态迁移。
+4. 用 `learn session start|end` 开始或结束绑定单元的真实学习会话。
+5. 用 `learn flashcard ...` 添加可复习内容。
+6. 用 `learn review ... --json` 查询待复习或过期复习项。
+7. 用户完成复习后，用 `learn review-submit <id> <rating> --project <project>` 提交结果。
 
 复习评分只能使用：`again`、`hard`、`good`、`easy`。
 
 学习阶段只能使用：`novice`、`beginner`、`intermediate`、`advanced`、`master`。
+
+学习单元状态只能使用：`not_started`、`learning`、`assessment_pending`、`consolidating`、`mastered`、`remediation`。项目阶段是兼容性元数据，不等于单元掌握状态。
 
 复习项类型只能使用：`note`、`knowledge-point`、`project`、`flashcard`。
 
@@ -53,6 +56,12 @@ learn stats [--week] [--month] [--json]
 learn init [--json]
 learn config get [key] [--json]
 learn doctor [--json]
+
+learn unit add --project <project> --id <id> --title "<title>" [--note <path>] [--prerequisites <ids>] [--json]
+learn unit list --project <project> [--json]
+learn unit next --project <project> [--json]
+learn unit evidence --project <project> --unit <id> --type <recall|explain|apply|transfer|artifact> --role <attempt|misconception|correction|verification|observation> --summary "<summary>" [--reference <ref>] [--assisted] [--delayed] [--session <id>] [--json]
+learn unit transition --project <project> --unit <id> --to <status> [--json]
 ```
 
 使用 `learn new` 创建项目目录结构并注册项目元数据。如果未提供 `--path`，CLI 会使用当前有效配置中的 `defaultProjectsDir`。使用 `learn project import --path <dir>` 注册已有学习目录；该命令会补齐缺失的最小目录结构，但不会覆盖已有 `README.md`、`progress.md` 或 `reviews/review-index.json`。项目索引路径 `indexPath` 和项目目录默认值 `defaultProjectsDir` 是两个概念，不要混用。
@@ -62,11 +71,15 @@ learn doctor [--json]
 ### 学习会话
 
 ```bash
-learn session start --project <project> [--json]
+learn session start --project <project> [--unit <id>] [--json]
 learn session end --project <project> --duration <minutes> --summary "<summary>" [--note "<note>"] [--stage <stage>] [--json]
 ```
 
 在真实学习结束后使用 `session end`。它会更新总学习时长和 `lastStudyDate`，并写入 `reviews/session-history.json`；如果提供 `--stage`，也会更新学习阶段。`learn stats --week/--month` 基于会话历史计算周/月学习时长。
+
+`session start --unit` 会绑定单元并保存活动会话；`session end` 使用真实开始时间，结束后写入历史并清除活动状态。`session end` 和项目 `stage` 不自动表示单元已稳定掌握。
+
+`unit evidence` 将精选证据写入 `learning-units.json`；单元配置了 `notePath` 时，同时向 Note 的“学习证据”章节追加简短标记记录。完整对话不得作为证据批量写入。`type` 表示能力层级，`role` 表示初始尝试、误区、纠正、验收或观察；只有独立的 `correction/verification` 能满足状态门槛。进入 `consolidating` 需要独立解释和应用证据，进入 `mastered` 需要延迟独立证据。
 
 ### 复习队列
 
@@ -122,6 +135,7 @@ Linux: ${XDG_DATA_HOME:-~/.local/share}/learning-process-manager/learning-projec
 ```text
 README.md
 progress.md
+learning-units.json
 notes/
 knowledge/
 flashcards/deck.json
@@ -135,6 +149,8 @@ reviews/session-history.json
 `reviews/review-index.json` 保存 `ReviewableItem` 条目。`storageType: "inline"` 表示直接存储问题和答案；`storageType: "reference"` 表示存储文档路径，以及可选的章节或行号范围。
 
 `reviews/review-history.json` 保存复习提交记录。`reviews/session-history.json` 保存学习会话记录。项目索引、复习索引、复习历史和会话历史写入使用文件锁和原子写入；并发 Agent 仍应优先通过 CLI 操作，不要手工编辑这些 JSON 文件。
+
+`learning-units.json` 保存单元依赖、状态与证据，由 `learn unit` 命令管理。`reviews/active-session.json` 仅在会话进行中存在。不要手工编辑这两个文件。
 
 ## 输出约定
 
